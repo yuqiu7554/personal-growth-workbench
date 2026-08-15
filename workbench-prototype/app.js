@@ -389,8 +389,14 @@
   }
 
   function plainNewsText(value) {
-    const parsed = new DOMParser().parseFromString(String(value || ''), 'text/html');
-    return (parsed.body.textContent || '').replace(/\s+/g, ' ').trim();
+    if (!window.DOMPurify) throw new Error('DOM sanitizer is unavailable');
+    const fragment = window.DOMPurify.sanitize(String(value || ''), {
+      RETURN_DOM_FRAGMENT: true,
+      USE_PROFILES: { html: true },
+      FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'link', 'meta', 'base'],
+      FORBID_ATTR: ['srcdoc']
+    });
+    return (fragment.textContent || '').replace(/\s+/g, ' ').trim();
   }
 
   function classifyNews(item, fallback) {
