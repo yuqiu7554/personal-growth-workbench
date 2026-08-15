@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: file:; media-src https: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>个人成长工作台</title>
+  <link rel="stylesheet" href="styles.css?v=20260814-module-preferences">
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <aside class="sidebar" aria-label="主导航">
+      <div class="brand-row">
+        <button class="icon-button" id="sidebarToggle" type="button" aria-label="折叠侧栏" data-tooltip="折叠侧栏">☰</button>
+        <div class="brand-copy">
+          <strong>个人成长工作台</strong>
+          <span>Research · English · Life</span>
+        </div>
+      </div>
+
+      <nav id="mainNav">
+        <section class="nav-group">
+          <p class="nav-label">总览与计划</p>
+          <button class="nav-item active" type="button" data-view="overview"><span aria-hidden="true">⌂</span><span>工作台总览</span></button>
+          <button class="nav-item" type="button" data-view="tasks"><span aria-hidden="true">✓</span><span>今日待办</span><b id="taskNavCount">4</b></button>
+          <button class="nav-item" type="button" data-view="calendar"><span aria-hidden="true">□</span><span>日历</span></button>
+          <button class="nav-item" type="button" data-view="goals"><span aria-hidden="true">◎</span><span>目标与规划</span></button>
+          <button class="nav-item" type="button" data-view="reports"><span aria-hidden="true">↻</span><span>周月总结</span></button>
+        </section>
+        <section class="nav-group">
+          <p class="nav-label">学习与科研</p>
+          <button class="nav-item" type="button" data-view="english"><span aria-hidden="true">A</span><span>英语学习</span><b id="wordNavCount">0</b></button>
+          <button class="nav-item" type="button" data-view="ielts"><span aria-hidden="true">I</span><span>IELTS 训练</span><b id="ieltsNavCount">0</b></button>
+          <button class="nav-item" type="button" data-view="cet6"><span aria-hidden="true">6</span><span>CET-6 训练</span><b id="cet6NavCount">0</b></button>
+          <button class="nav-item" type="button" data-view="research"><span aria-hidden="true">§</span><span>论文项目</span></button>
+        </section>
+        <section class="nav-group">
+          <p class="nav-label">资讯与资料</p>
+          <button class="nav-item" type="button" data-view="news"><span aria-hidden="true">#</span><span>今日热点</span><b>6</b></button>
+          <button class="nav-item" type="button" data-view="papers"><span aria-hidden="true">▤</span><span>每周论文</span></button>
+          <button class="nav-item" type="button" data-view="library"><span aria-hidden="true">☆</span><span>资料库</span><b id="libraryNavCount">0</b></button>
+        </section>
+        <section class="nav-group">
+          <p class="nav-label">健康</p>
+          <button class="nav-item" type="button" data-view="health"><span aria-hidden="true">＋</span><span>运动健康</span></button>
+        </section>
+        <section class="nav-group">
+          <p class="nav-label">复盘</p>
+          <button class="nav-item" type="button" data-view="review"><span aria-hidden="true">✎</span><span>今日复盘</span></button>
+        </section>
+        <section class="nav-group">
+          <p class="nav-label">AI 助手</p>
+          <button class="nav-item" type="button" data-view="ai"><span aria-hidden="true">✦</span><span>成长规划 AI</span></button>
+        </section>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="nav-item" type="button" data-view="settings"><span aria-hidden="true">⚙</span><span>设置</span></button>
+        <button class="nav-item" id="themeToggle" type="button"><span aria-hidden="true">◐</span><span>切换外观</span></button>
+        <button class="nav-item" id="compactToggle" type="button"><span aria-hidden="true">≡</span><span>紧凑模式</span></button>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <button class="icon-button mobile-menu-button" id="mobileMenuButton" type="button" aria-label="打开导航">☰</button>
+        <div class="mobile-brand">个人成长工作台</div>
+        <div class="topbar-date" id="topbarDate"></div>
+        <div class="topbar-actions">
+          <button class="search-button" id="searchButton" type="button"><span aria-hidden="true">⌕</span><span>搜索</span><kbd>⌘ K</kbd></button>
+          <button class="button primary" id="quickAddButton" type="button"><span aria-hidden="true">＋</span>快速新增</button>
+          <button class="icon-button" id="privacyToggle" type="button" aria-pressed="false" data-tooltip="隐私模式" aria-label="切换隐私模式">◉</button>
+          <button class="icon-button" type="button" data-tooltip="通知" aria-label="通知">♢</button>
+          <button class="avatar-button" type="button" data-go-view="settings" aria-label="个人设置">XY</button>
+        </div>
+      </header>
+
+      <div class="content-wrap">
+        <section class="view active" id="overviewView" data-view-panel="overview" aria-labelledby="overviewTitle">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow" id="todayLabel"></p>
+              <h1 id="overviewTitle">早上好，今天先完成最重要的三件事。</h1>
+            </div>
+            <div class="status-pills">
+              <span class="status-pill"><b id="cetCountdown">122</b> 天 CET-6</span>
+              <span class="status-pill"><b>370 → 500</b> 目标差距</span>
+            </div>
+          </div>
+
+          <section class="advice-bar" aria-label="AI今日建议">
+            <div>
+              <span class="section-kicker">AI 今日建议</span>
+              <p id="adviceText">上午优先推进小论文模型假设，英语复习安排在精力下降后的短时段。</p>
+            </div>
+            <button class="text-button" id="regenerateAdvice" type="button">重新生成</button>
+          </section>
+
+          <div class="dashboard-grid primary-grid">
+            <section class="panel key-panel">
+              <div class="panel-heading">
+                <div><span class="section-kicker">今日重点</span><h2>三项关键任务</h2></div>
+                <button class="text-button" type="button" data-go-view="tasks">查看全部</button>
+              </div>
+              <div id="keyTaskList" class="task-list"></div>
+              <div class="panel-footer"><span id="keyTaskProgress">0 / 3 已完成</span><div class="progress-track"><span id="keyTaskBar"></span></div></div>
+            </section>
+
+            <section class="panel schedule-panel">
+              <div class="panel-heading">
+                <div><span class="section-kicker">今日安排</span><h2>当前与下一项</h2></div>
+                <button class="text-button" type="button" data-go-view="calendar">全天时间轴</button>
+              </div>
+              <div class="now-block">
+                <time>09:00–11:00</time><span>进行中</span>
+                <h3>小论文 · 梳理研究问题与模型变量</h3>
+                <button class="button subtle" id="timerButton" type="button">开始计时</button>
+              </div>
+              <ol class="timeline-list">
+                <li><time>14:30</time><div><strong>CET-6 阅读真题</strong><span>60 分钟</span></div></li>
+                <li><time>18:30</time><div><strong>组会准备</strong><span>固定日程</span></div></li>
+                <li><time>22:30</time><div><strong>今日复盘</strong><span>预计 10 分钟</span></div></li>
+              </ol>
+            </section>
+          </div>
+
+          <div class="dashboard-grid goals-grid">
+            <section class="panel span-two">
+              <div class="panel-heading"><div><span class="section-kicker">当前阶段</span><h2>目标与下一里程碑</h2></div><button class="text-button" type="button" data-go-view="goals">规划中心</button></div>
+              <div id="goalSummary" class="goal-summary"></div>
+            </section>
+            <section class="panel english-card private-content">
+              <div class="panel-heading"><div><span class="section-kicker">英语学习</span><h2>今日任务</h2></div><span class="metric">28 词</span></div>
+              <div class="english-stats"><div><b>28</b><span>到期复习</span></div><div><b>1 / 2</b><span>本周训练</span></div><div><b>3.2h</b><span>本周累计</span></div></div>
+              <button class="button block" type="button">开始单词复习</button>
+            </section>
+          </div>
+
+          <div class="dashboard-grid lower-grid">
+            <section class="panel research-card private-content">
+              <div class="panel-heading"><div><span class="section-kicker">论文项目</span><h2>科研进展</h2></div><span class="status-tag warning">1 项阻塞</span></div>
+              <div class="project-row"><div><strong>小论文</strong><span>理论框架与假设</span></div><b>42%</b></div>
+              <div class="project-row"><div><strong>毕业论文</strong><span>选题与研究问题</span></div><b>18%</b></div>
+              <p class="muted-note">下一里程碑：完成变量关系图与第一版研究假设</p>
+            </section>
+
+            <section class="panel health-card private-content">
+              <div class="panel-heading"><div><span class="section-kicker">健康</span><h2>今日最低任务</h2></div><span id="waterMetric" class="metric">800 / 2000 ml</span></div>
+              <div class="water-track"><span id="waterBar"></span></div>
+              <div class="quick-water" aria-label="快捷饮水记录">
+                <button type="button" data-water="100">+100</button><button type="button" data-water="200">+200</button><button type="button" data-water="300">+300</button><button type="button" data-water="500">+500</button>
+              </div>
+              <div class="health-row"><span>本周运动</span><b>1 / 2 次 · 45 / 90 分钟</b></div>
+            </section>
+
+            <section class="panel review-card private-content">
+              <div class="panel-heading"><div><span class="section-kicker">今日复盘</span><h2>晚上留 10 分钟</h2></div><span class="status-tag">22:30</span></div>
+              <p>核对今日成果、阻碍与估时偏差，再确认明天最重要的一件事。</p>
+              <button class="button block subtle" type="button">进入复盘</button>
+            </section>
+          </div>
+
+          <section class="panel news-panel">
+            <div class="panel-heading"><div><span class="section-kicker">今日热点</span><h2>物流与供应链 · 6 条</h2></div><span class="updated">08:00 更新</span></div>
+            <div id="newsList" class="news-list"></div>
+          </section>
+        </section>
+
+        <section class="view" id="tasksView" data-view-panel="tasks" aria-labelledby="tasksTitle">
+          <div class="page-heading"><div><p class="eyebrow">按目标分组</p><h1 id="tasksTitle">今日待办</h1></div><button class="button primary" type="button" data-open-add="task">＋ 新增任务</button></div>
+          <div class="summary-strip"><div><span>已完成</span><b id="tasksDoneMetric">0</b></div><div><span>关键任务</span><b id="tasksKeyMetric">0 / 3</b></div><div><span>计划时长</span><b>5h 20m</b></div><div><span>延期</span><b>1</b></div></div>
+          <section class="panel"><div class="panel-heading"><div><span class="section-kicker">优先处理</span><h2>今日三项关键任务</h2></div></div><div id="allTaskList" class="task-list detailed"></div></section>
+        </section>
+
+        <section class="view" id="calendarView" data-view-panel="calendar" aria-labelledby="calendarTitle">
+          <div class="page-heading"><div><p class="eyebrow" id="calendarRangeLabel">周一至周日 · 08:00–23:59</p><h1 id="calendarTitle">本周日历</h1></div><div class="calendar-heading-actions"><div class="segmented calendar-mode-switch" id="calendarModeSwitch" aria-label="日历模式" hidden><button class="active" type="button" data-calendar-mode="work">工作</button><button type="button" data-calendar-mode="timetable">课程表</button></div><button class="button primary" id="addCalendarItemButton" type="button">增加</button><div class="segmented" id="calendarViewSwitch" aria-label="日历视图"><button class="active" type="button" data-calendar-view="week">周</button><button type="button" data-calendar-view="month">月</button></div></div></div>
+          <section class="calendar-shell"><div class="calendar-head" id="calendarHead"></div><div class="week-grid" id="weekGrid"></div></section>
+        </section>
+
+        <section class="view" id="goalsView" data-view-panel="goals" aria-labelledby="goalsTitle">
+          <div class="page-heading"><div><p class="eyebrow">阶段目标 · 月目标 · 周目标</p><h1 id="goalsTitle">目标与规划中心</h1></div><button class="button primary" id="addGoalButton" type="button">＋ 新增目标</button></div>
+          <div class="goal-page-grid" id="goalPageGrid"></div>
+        </section>
+
+        <section class="view" id="reportsView" data-view-panel="reports" aria-labelledby="reportsTitle">
+          <div class="page-heading"><div><p class="eyebrow">成果证据优先 · AI草案需确认</p><h1 id="reportsTitle">总结与智能计划</h1></div><div class="segmented report-tabs"><button class="active" type="button" data-report-tab="weekly">周总结</button><button type="button" data-report-tab="monthly">月总结</button></div></div>
+          <div class="report-panel active" data-report-panel="weekly">
+            <div class="report-hero"><div><span>本周状态</span><strong id="weeklyStatus">证据不足</strong><small>周一00:00至周日23:59</small></div><div><span>任务完成</span><strong id="weeklyTaskRate">0%</strong><small id="weeklyTaskDetail">0 / 0</small></div><div><span>关键成果</span><strong id="weeklyEvidenceCount">0</strong><small>成果文件或记录</small></div><div><span>计划准确率</span><strong>待建立</strong><small>需计划/实际时长</small></div></div>
+            <div class="report-grid"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">本周总结草案</span><h2>事实、阻碍与趋势</h2></div><button class="button" id="generateWeeklyButton" type="button">生成草案</button></div><div id="weeklyNarrative" class="report-narrative"><p>尚未生成。本地规则会先汇总任务、英语、健康与复盘；AI不可用时仍可生成事实摘要。</p></div></section><section class="panel"><div class="panel-heading"><div><span class="section-kicker">下周计划</span><h2>最低 / 标准 / 冲刺</h2></div><span class="status-tag" id="weeklyConfirmationStatus">需确认</span></div><div class="plan-levels" id="planLevels"><button type="button" data-plan-level="最低"><b>最低</b><span>精力下降时保底</span></button><button class="active" type="button" data-plan-level="标准"><b>标准</b><span>最多3项关键任务</span></button><button type="button" data-plan-level="冲刺"><b>冲刺</b><span>提前时推进里程碑</span></button></div><div id="weeklyPlanDraft" class="plan-draft"><p>先生成周总结，再创建可逐项修改的下周草案。</p></div><button class="button primary block" id="confirmWeeklyPlan" type="button" disabled>确认写入下周计划</button></section></div>
+          </div>
+          <div class="report-panel" data-report-panel="monthly">
+            <div class="report-hero"><div><span>月度周期</span><strong>自然月</strong><small>按实际日期归属</small></div><div><span>目标趋势</span><strong>待评估</strong><small>比较应有进度</small></div><div><span>下月成果</span><strong>3–5项</strong><small>再由周计划拆分</small></div><div><span>路径证据</span><strong>月度更新</strong><small>决策门完整比较</small></div></div>
+            <div class="report-grid"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">整月趋势</span><h2>独立分析，不拼接周报</h2></div><button class="button" id="generateMonthlyButton" type="button">生成月报草案</button></div><div id="monthlyNarrative" class="report-narrative"><p>将比较上月、本月计划、目标应有进度和近三月趋势。当前原型只生成本地示范摘要。</p></div></section><section class="panel"><div class="panel-heading"><div><span class="section-kicker">下月重点</span><h2>成果级目标</h2></div><span class="status-tag" id="monthlyConfirmationStatus">需确认</span></div><div id="monthlyOutcomes" class="outcome-list"></div><button class="button primary block" id="confirmMonthlyButton" type="button" disabled>确认下月重点</button></section></div>
+          </div>
+        </section>
+
+        <section class="view" id="englishView" data-view-panel="english" aria-labelledby="englishTitle">
+          <div class="page-heading">
+            <div><p class="eyebrow">CET-6 优先 · IELTS 基础维持</p><h1 id="englishTitle">英语学习</h1></div>
+            <div class="status-pills"><span class="status-pill"><b>3h</b> 每周最低</span><span class="status-pill"><b>5h</b> 每周标准</span></div>
+          </div>
+          <div class="summary-strip english-summary"><div><span>本周时长</span><b>3.2h</b></div><div><span>到期复习</span><b id="dueWordMetric">0</b></div><div><span>CET-6 基线</span><b>370</b></div><div><span>目标</span><b>500</b></div></div>
+          <section class="panel youdao-lookup-panel">
+            <div class="panel-heading"><div><span class="section-kicker">有道官方 API</span><h2>查询单词或短语</h2></div><span id="youdaoEnglishStatus" class="status-tag">正在检查配置</span></div>
+            <form id="youdaoLookupForm" class="youdao-lookup-form"><label for="youdaoLookupInput">英文词项</label><div><input id="youdaoLookupInput" maxlength="500" autocomplete="off" spellcheck="false" placeholder="输入单词或短语"><button class="button primary" id="youdaoLookupButton" type="submit">查询</button></div></form>
+            <div id="youdaoLookupResult" class="youdao-result" aria-live="polite"><span>在“设置 → 英语服务”填写有道智云应用 ID 和应用密钥后，可获取参考释义。</span></div>
+          </section>
+          <div class="dashboard-grid english-workspace">
+            <section class="panel">
+              <div class="panel-heading"><div><span class="section-kicker">每日录入</span><h2>添加单词或短语</h2></div><span class="status-tag">新词可选</span></div>
+              <label class="field-label" for="wordInput">每行输入一个词项，可在 / 后填写中文释义</label>
+              <textarea class="text-area" id="wordInput" rows="7" placeholder="amazing/惊喜的；令人惊讶的&#10;amazing / 惊喜的;令人惊讶的&#10;amazing"></textarea>
+              <div class="inline-actions"><span class="muted-note">支持中文；或英文;分隔多个释义；只输入词项时查询本地词库或有道</span><button class="button primary" id="addWordsButton" type="button">加入今日学习</button></div>
+            </section>
+            <section class="panel">
+              <div class="panel-heading"><div><span class="section-kicker">固定排程</span><h2>记忆规则</h2></div></div>
+              <ol class="memory-steps"><li><b>第 2 天</b><span>首次短间隔巩固</span></li><li><b>第 3 天</b><span>连续强化辨认</span></li><li><b>第 7 天</b><span>一周检查</span></li><li><b>第 15 天</b><span>中期巩固</span></li><li><b>第 30 天</b><span>熟练掌握检查点</span></li></ol>
+              <p class="muted-note">漏做任务次日置顶补做，固定节点不整体顺延；第30天错误会在第31天启动新周期。</p>
+            </section>
+          </div>
+          <section class="panel">
+            <div class="panel-heading"><div><span class="section-kicker">今日学习表</span><h2>单词 / 短语 + 中文释义</h2></div><div class="word-heading-actions"><span id="wordSessionStatus" class="status-tag">等待录入</span><button class="button" id="batchDeleteWordsButton" type="button">批量删除</button></div></div>
+            <form id="wordPracticeForm">
+              <div class="table-wrap"><table class="word-table"><thead><tr><th>操作</th><th>单词或短语</th><th id="wordMeaningHeading">中文释义</th><th>来源</th><th>结果</th></tr></thead><tbody id="wordPracticeBody"></tbody></table></div>
+              <div class="inline-actions end"><button class="button" id="clearWordAnswersButton" type="button" hidden>一键清空</button><button class="button primary" id="wordPrimaryAction" type="submit">开始学习</button></div>
+            </form>
+          </section>
+          <section class="panel" id="wordRetryPanel" hidden><div class="panel-heading"><div><span class="section-kicker">可重复练习</span><h2>今日复习表</h2></div><span id="wordRetryStatus" class="status-tag">0 个待复习</span></div><form id="wordRetryForm"><div class="table-wrap"><table class="word-table"><thead><tr><th>单词或短语</th><th>输入中文释义</th><th>本次结果</th></tr></thead><tbody id="wordRetryBody"></tbody></table></div><div class="inline-actions end"><button class="button" id="clearRetryAnswersButton" type="button">一键清空</button><button class="button primary" type="submit">提交复习</button></div></form></section>
+          <section class="word-entry-grid"><button class="panel word-entry-card" id="openWordBankButton" type="button"><span>本地词库</span><strong id="wordBankMetric">0</strong><small>搜索、编辑释义和管理状态</small></button><button class="panel word-entry-card" id="openMasteredWordsButton" type="button"><span>熟练掌握</span><strong id="masteredWordMetric">0</strong><small>正确或部分正确通过第30天</small></button><button class="panel word-entry-card" id="openWordTrashButton" type="button"><span>词汇回收站</span><strong id="wordTrashMetric">0</strong><small>本地保留30天，可恢复</small></button><button class="panel word-entry-card" id="openCheckpointButton" type="button" hidden><span>第30天待确认</span><strong id="checkpointWordMetric">0</strong><small>确认下一轮名单</small></button></section>
+        </section>
+
+        <section class="view" id="ieltsView" data-view-panel="ielts" aria-labelledby="ieltsTitle">
+          <div class="page-heading"><div><p class="eyebrow">笔试与口语独立 · 本地资料与录音</p><h1 id="ieltsTitle">IELTS 训练</h1></div><div class="status-pills"><span class="status-pill"><b>6.5</b> 目标</span><span class="status-pill"><b id="ieltsDefaultTypeLabel">Academic</b> 默认</span></div></div>
+          <div class="exam-summary"><div><span>笔试记录</span><b id="ieltsRecordMetric">0</b></div><div><span>口语录音</span><b id="ieltsSpeakingMetric">0</b></div><div><span>待复盘</span><b id="ieltsReviewMetric">0</b></div><div><span>资料</span><b id="ieltsMaterialMetric">0</b></div></div>
+          <div class="segmented ielts-tabs" aria-label="IELTS页面"><button class="active" type="button" data-ielts-tab="overview">总览</button><button type="button" data-ielts-tab="written">笔试训练</button><button type="button" data-ielts-tab="speaking">口语训练</button><button type="button" data-ielts-tab="materials">真题资料库</button><button type="button" data-ielts-tab="records">训练记录</button><button type="button" data-ielts-tab="weaknesses">错题与薄弱项</button><button type="button" data-ielts-tab="ai">IELTS AI</button></div>
+
+          <div class="ielts-panel active" data-ielts-panel="overview"><div class="ielts-overview-grid"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">笔试</span><h2>听力、阅读与写作</h2></div><button class="button" type="button" data-open-ielts-tab="written">开始训练</button></div><div id="ieltsWrittenOverview" class="empty-state compact-empty"></div></section><section class="panel"><div class="panel-heading"><div><span class="section-kicker">独立口语考试</span><h2>题库、录音与最佳回答</h2></div><button class="button" type="button" data-open-ielts-tab="speaking">进入口语</button></div><div id="ieltsSpeakingOverview" class="empty-state compact-empty"></div></section></div><section class="score-boundary"><strong>评分边界</strong><span>只有使用已核验、带来源和版本的规则时才显示非官方 Band 区间；AI反馈不写入正式成绩。</span></section></div>
+
+          <div class="ielts-panel" data-ielts-panel="written"><section class="training-launch-grid"><button class="panel training-launch-card" id="startIeltsFullButton" type="button"><span class="section-kicker">听力 · 阅读 · 写作</span><strong>完整笔试模拟</strong><small>选择机考或纸笔官方预设，按顺序连续训练</small></button><button class="panel training-launch-card" id="startIeltsModulesButton" type="button"><span class="section-kicker">自由组合</span><strong>模块组合训练</strong><small>组合听力、阅读、Task 1、Task 2并调整顺序</small></button><button class="panel training-launch-card" id="startIeltsDirectTimerButton" type="button"><span class="section-kicker">无需上传资料</span><strong>纸质版/其他平台直接计时</strong><small>只运行计时，结束后填写独立训练记录</small></button></section><section class="panel ielts-current-session"><div class="panel-heading"><div><span class="section-kicker">当前笔试训练</span><h2 id="ieltsCurrentSessionTitle">尚未开始</h2></div><button class="button primary" id="resumeIeltsSessionButton" type="button" hidden>继续训练</button></div><div id="ieltsCurrentSessionSummary" class="empty-state compact-empty"><strong>选择一种训练方式</strong><span>准备完成后仍需点击开始，不会自动计时或播放音频。</span></div></section></div>
+
+          <div class="ielts-panel" data-ielts-panel="speaking"><div class="speaking-toolbar"><div class="segmented" aria-label="口语练习模式"><button class="active" type="button" data-speaking-mode="questions">逐题练习</button><button type="button" data-speaking-mode="simulation">完整模拟</button></div><div class="inline-actions"><button class="button" id="testIeltsMicrophoneButton" type="button">麦克风测试</button><button class="button primary" id="addIeltsTopicButton" type="button">新增话题</button></div></div><div class="speaking-layout"><aside class="panel speaking-topic-panel"><div class="panel-heading"><div><span class="section-kicker">本地题库</span><h2>话题与 Part</h2></div></div><div id="ieltsTopicList" class="speaking-topic-list"></div></aside><section class="panel speaking-question-panel"><div class="panel-heading"><div><span class="section-kicker" id="ieltsSpeakingPartLabel">选择话题</span><h2 id="ieltsSpeakingTopicTitle">口语训练</h2></div><div class="inline-actions"><button class="button" id="clearIeltsTopicRecordingsButton" type="button" disabled>清空话题录音</button><button class="button" id="addIeltsQuestionButton" type="button" disabled>增加题目</button></div></div><div id="ieltsQuestionList" class="speaking-question-list"><div class="empty-state"><strong>尚未选择话题</strong><span>创建或选择话题后，可逐题录音或启动完整模拟。</span></div></div></section></div></div>
+
+          <div class="ielts-panel" data-ielts-panel="materials"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">本地真题资料库</span><h2>剑雅册次、试卷、答案与音频</h2></div><div class="inline-actions"><button class="button" id="chooseIeltsFilesButton" type="button">选择文件</button><button class="button primary" id="chooseIeltsFolderButton" type="button">选择文件夹</button></div></div><div id="ieltsMaterialList" class="cet6-material-list"></div></section></div>
+
+          <div class="ielts-panel" data-ielts-panel="records"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">IELTS 独立记录</span><h2>笔试训练历史</h2></div><span class="muted-note">完成日期和训练模块为必填</span></div><div id="ieltsRecordList" class="exam-record-list"></div></section><section class="panel"><div class="panel-heading"><div><span class="section-kicker">独立口语考试</span><h2>口语会话历史</h2></div></div><div id="ieltsSpeakingSessionList" class="exam-record-list"></div></section></div>
+
+          <div class="ielts-panel" data-ielts-panel="weaknesses"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">规则统计</span><h2>待复盘与口语练习队列</h2></div></div><div id="ieltsWeaknessList" class="exam-record-list"></div></section></div>
+
+          <div class="ielts-panel" data-ielts-panel="ai"><div class="ai-scope-banner"><strong>IELTS AI 功能边界</strong><span>仅处理口语转写与 IELTS 写作；听力、阅读和原始录音不会发送给 DeepSeek。</span></div><div class="segmented ielts-ai-tabs"><button class="active" type="button" data-ielts-ai-mode="speaking">口语分析</button><button type="button" data-ielts-ai-mode="writing">写作批改</button></div><section class="panel"><form id="ieltsAiForm" class="scoped-ai-form"><div id="ieltsAiSpeakingFields"><label>题目<textarea id="ieltsAiQuestion" rows="3" placeholder="选择口语题目后自动填入，也可手动输入"></textarea></label><label>确认后的英文转写<textarea id="ieltsAiTranscript" rows="9" placeholder="原始录音不会上传；请先校对转写文本"></textarea></label><label class="inline-checkbox"><input id="ieltsAiHistoryScope" type="checkbox">比较同一道题最近5次已确认转写</label></div><div id="ieltsAiWritingFields" hidden><div class="form-grid"><label>考试类型<select id="ieltsAiExamType"><option>Academic</option><option>General Training</option></select></label><label>写作任务<select id="ieltsAiWritingTask"><option>Task 1</option><option>Task 2</option></select></label></div><label>题目<textarea id="ieltsAiWritingQuestion" rows="4"></textarea></label><label>作文正文<textarea id="ieltsAiWritingAnswer" rows="10"></textarea></label><label class="file-field">本地附件（仅用于提取/OCR，发送前需确认）<input id="ieltsAiWritingFile" type="file" accept="image/*,.pdf,.doc,.docx"></label></div><div class="dialog-actions"><span id="ieltsAiStatus" class="muted-note" aria-live="polite">使用设置中的 IELTS 功能配置</span><button class="button primary" type="submit">分析并继续追问</button></div></form></section><section class="panel ai-chat-panel"><div id="ieltsAiMessages" class="ai-chat-messages" aria-live="polite"></div><form id="ieltsAiFollowupForm" class="ai-chat-composer"><textarea id="ieltsAiFollowup" rows="3" placeholder="仅可继续询问当前 IELTS 口语或写作反馈"></textarea><div class="inline-actions end"><button class="button primary" type="submit">继续追问</button></div></form></section></div>
+        </section>
+
+        <section class="view" id="cet6View" data-view-panel="cet6" aria-labelledby="cet6Title">
+          <div class="page-heading"><div><p class="eyebrow">本地资料 · 独立训练 · 计时与复盘</p><h1 id="cet6Title">CET-6 训练</h1></div><div class="status-pills"><span class="status-pill"><b>370</b> 正式基线</span><span class="status-pill"><b>500</b> 目标</span></div></div>
+          <div class="exam-summary"><div><span>已录入训练</span><b id="cet6RecordMetric">0</b></div><div><span>待复盘</span><b id="cet6ReviewMetric">0</b></div><div><span>预测状态</span><b id="cet6PredictionMetric">样本不足</b></div><div><span>每周最低</span><b>2次</b></div></div>
+          <div class="segmented cet6-tabs" aria-label="CET-6页面"><button class="active" type="button" data-cet6-tab="training">训练营</button><button type="button" data-cet6-tab="materials">真题资料库</button><button type="button" data-cet6-tab="records">训练记录</button><button type="button" data-cet6-tab="reviews">错题与复盘</button></div>
+          <div class="cet6-panel active" data-cet6-panel="training">
+            <section class="training-launch-grid"><button class="panel training-launch-card" id="startCet6PaperButton" type="button"><span class="section-kicker">整张试卷</span><strong>套卷训练</strong><small>模拟15:00–17:25、总倒计时或分模块计时</small></button><button class="panel training-launch-card" id="startCet6ModulesButton" type="button"><span class="section-kicker">自由组合</span><strong>模块训练</strong><small>选择多个题型，自定顺序和完成时间</small></button><button class="panel training-launch-card" id="startCet6PaperTimerButton" type="button"><span class="section-kicker">无需上传资料</span><strong>纸质版做题，直接开始计时</strong><small>适用于纸质试卷或其他平台训练</small></button></section>
+            <section class="panel cet6-current-session"><div class="panel-heading"><div><span class="section-kicker">当前训练</span><h2 id="cet6CurrentSessionTitle">尚未开始</h2></div><button class="button primary" id="resumeCet6SessionButton" type="button" hidden>继续训练</button></div><div id="cet6CurrentSessionSummary" class="empty-state compact-empty"><strong>选择一种训练方式</strong><span>准备完成后仍需点击“开始”，不会自动计时或播放音频。</span></div></section>
+            <section class="score-boundary"><strong>710分边界</strong><span>正确题数只能依据已配置、可追溯的规则生成非官方估算；正式成绩始终单独保存。</span></section>
+          </div>
+          <div class="cet6-panel" data-cet6-panel="materials"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">本地真题资料库</span><h2>试卷、答案与听力音频</h2></div><div class="inline-actions"><button class="button" id="chooseCet6FilesButton" type="button">选择文件</button><button class="button primary" id="chooseCet6FolderButton" type="button">选择文件夹</button></div></div><div id="cet6MaterialList" class="cet6-material-list"></div></section></div>
+          <div class="cet6-panel" data-cet6-panel="records"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">CET-6 独立记录</span><h2>训练历史</h2></div><span class="muted-note">完成日期和训练模块为必填</span></div><div id="cet6RecordList" class="exam-record-list"></div></section></div>
+          <div class="cet6-panel" data-cet6-panel="reviews"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">错题与复盘</span><h2>待复盘训练</h2></div><span class="status-tag">不与 IELTS 共用</span></div><div id="cet6ReviewList" class="exam-record-list"></div></section></div>
+        </section>
+
+        <section class="view" id="researchView" data-view-panel="research" aria-labelledby="researchTitle">
+          <div class="page-heading"><div><p class="eyebrow">项目 · 资料 · 里程碑 · 甘特图</p><h1 id="researchTitle">论文项目</h1></div><div class="page-heading-actions"><span class="status-pill" id="researchProjectCount">0 个进行中项目</span><button class="button primary" id="addResearchProjectButton" type="button">＋ 新增项目</button></div></div>
+          <div id="researchWorkspace" class="research-workspace">
+            <aside class="panel research-project-sidebar"><div class="panel-heading"><div><span class="section-kicker">项目列表</span><h2>研究工作</h2></div><button class="icon-button" id="researchArchiveButton" type="button" title="查看归档项目" aria-label="查看归档项目">⌂</button></div><input id="researchProjectSearch" type="search" placeholder="搜索项目"><div id="researchProjectList" class="project-list"></div></aside>
+            <section class="research-project-main private-content"><div class="panel research-project-header"><div><span class="section-kicker" id="researchProjectType">选择项目</span><h2 id="activeResearchProjectTitle">论文项目工作区</h2><p id="researchProjectMeta" class="muted-note"></p></div><div class="research-project-actions"><strong id="activeResearchProgress" class="metric">0%</strong><button class="button" id="editResearchProjectButton" type="button">编辑</button><button class="icon-button" id="researchProjectMenuButton" type="button" aria-label="项目操作" title="项目操作">•••</button></div></div>
+              <div class="segmented research-tabs" aria-label="论文项目工作区"><button class="active" type="button" data-research-tab="overview">概览</button><button type="button" data-research-tab="milestones">阶段与里程碑</button><button type="button" data-research-tab="assets">项目资料</button><button type="button" data-research-tab="advisor">导师意见</button><button type="button" data-research-tab="versions">版本记录</button><button type="button" data-research-tab="logs">研究日志</button><button type="button" data-research-tab="blockers">阻塞中心</button><button type="button" data-research-tab="ai">AI 规划</button></div>
+              <div class="research-tab-panel active" data-research-panel="overview"><div id="researchOverviewGrid" class="research-overview-grid"></div><section class="panel"><div class="panel-heading"><div><span class="section-kicker">最近动态</span><h2>项目活动</h2></div></div><div id="researchActivityList" class="research-activity-list"></div></section></div>
+              <div class="research-tab-panel" data-research-panel="milestones"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">加权进度</span><h2>阶段与里程碑</h2></div><div class="inline-actions"><button class="button" id="addResearchStageButton" type="button">新增阶段</button><button class="button" id="saveResearchWeightsButton" type="button">保存阶段权重</button><button class="button primary" id="addResearchMilestoneButton" type="button">新增里程碑</button></div></div><p id="researchWeightStatus" class="muted-note">阶段权重之和必须为100%</p><div id="researchStageTrack" class="research-stage-list"></div></section></div>
+              <div class="research-tab-panel" data-research-panel="assets"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">当前项目独立资料区</span><h2>项目资料</h2></div><div class="inline-actions"><button class="button" id="addResearchLinkButton" type="button">新增链接/笔记</button><button class="button primary" id="uploadResearchAssetButton" type="button">上传资料</button></div></div><div id="researchAssetList" class="research-asset-list"></div></section></div>
+              <div class="research-tab-panel" data-research-panel="advisor"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">逐项回应</span><h2>导师意见</h2></div><button class="button primary" id="addAdvisorItemButton" type="button">新增意见</button></div><div id="researchAdvisorList" class="research-record-list"></div></section></div>
+              <div class="research-tab-panel" data-research-panel="versions"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">不覆盖历史</span><h2>版本记录</h2></div><button class="button primary" id="addResearchVersionButton" type="button">新增版本</button></div><div id="researchVersionList" class="research-record-list"></div></section></div>
+              <div class="research-tab-panel" data-research-panel="logs"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">假设 · 方法 · 会议 · 决策</span><h2>研究日志与决策记录</h2></div><button class="button primary" id="addResearchLogButton" type="button">新增日志</button></div><div id="researchLogList" class="research-record-list"></div></section></div>
+              <div class="research-tab-panel" data-research-panel="blockers"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">负责人 · 解决日期 · 状态</span><h2>阻塞中心</h2></div><button class="button primary" id="addResearchBlockerButton" type="button">新增阻塞</button></div><div id="researchBlockerList" class="research-record-list"></div></section></div>
+              <div class="research-tab-panel" data-research-panel="ai"><div class="ai-scope-banner"><strong>论文项目 AI 功能边界</strong><span>仅处理项目规划、风险、里程碑、导师意见与下一步建议；不会直接改写论文正文。</span></div><section class="panel ai-chat-panel"><div class="panel-heading"><div><span class="section-kicker">当前项目独立历史</span><h2>规划对话</h2></div><div class="inline-actions"><button class="button" id="exportResearchAiButton" type="button">导出</button><button class="button" id="clearResearchAiButton" type="button">清除</button></div></div><div id="researchAiMessages" class="ai-chat-messages" aria-live="polite"></div><form id="researchAiForm" class="ai-chat-composer"><textarea id="researchAiInput" rows="4" placeholder="例如：根据当前里程碑和阻塞，制定下周项目计划"></textarea><div class="research-ai-attachment"><button class="button" id="extractResearchAiAttachmentButton" type="button">选择附件并本地提取</button><span id="researchAiAttachmentStatus" class="muted-note">未添加附件</span></div><div class="inline-actions end"><span id="researchAiStatus" class="muted-note">正文和附件需逐项授权</span><button class="button primary" type="submit">生成规划草案</button></div></form></section></div>
+            </section>
+          </div>
+          <section class="panel research-gantt-panel"><div class="panel-heading"><div><span class="section-kicker">当前计划与原始基线</span><h2>全部项目时间进度</h2></div><div class="inline-actions"><input id="researchGanttSearch" type="search" placeholder="筛选项目"><label class="inline-checkbox"><input id="researchBaselineToggle" type="checkbox">显示原始基线</label></div></div><div id="researchGantt" class="research-gantt"></div></section>
+        </section>
+
+        <section class="view" id="newsView" data-view-panel="news" aria-labelledby="newsTitle">
+          <div class="page-heading"><div><p class="eyebrow">P0/P1可信来源优先 · 每日 08:00</p><h1 id="newsTitle">今日热点资讯</h1><p id="newsSyncStatus" class="sync-status" aria-live="polite">正在检查同步状态</p></div><div class="page-heading-actions"><div class="status-pills"><span class="status-pill">每主题 <b>3–5</b> 条</span></div><button class="button" id="refreshNewsButton" type="button">立即更新</button></div></div>
+          <div class="filter-row" id="newsThemeFilters" aria-label="资讯筛选"><button class="active" type="button" data-news-filter="all">全部</button><button type="button" data-news-filter="物流工程">物流工程</button><button type="button" data-news-filter="管理工程">管理工程</button><button type="button" data-news-filter="AI发展">AI发展</button><button type="button" data-news-filter="低空经济">低空经济</button></div>
+          <div id="newsFeed" class="content-feed"></div>
+        </section>
+
+        <section class="view" id="papersView" data-view-panel="papers" aria-labelledby="papersTitle">
+          <div class="page-heading"><div><p class="eyebrow">周一 08:00 · 严格白名单优先</p><h1 id="papersTitle">每周论文推送</h1><p id="paperSyncStatus" class="sync-status" aria-live="polite">正在检查同步状态</p></div><div class="page-heading-actions"><div class="status-pills"><span class="status-pill"><b>8</b> 篇上限</span><span class="status-pill">IEEE、MDPI 与自定义黑名单已过滤</span></div><button class="button" id="refreshPapersButton" type="button">立即更新</button><button class="button" id="openPaperHistoryButton" type="button">历史回顾</button></div></div>
+          <section class="quality-notice"><strong>正式推荐门槛</strong><span>仅接收严格筛选保留的 72 种期刊，以 ISSN 匹配为主、标准化刊名为辅助。当前状态显示“严格白名单匹配”，不虚构 JCR Q1 核验。</span></section>
+          <div id="paperFeed" class="content-feed paper-feed"></div>
+        </section>
+
+        <section class="view" id="paperHistoryView" data-view-panel="paper-history" aria-labelledby="paperHistoryTitle">
+          <div class="page-heading"><div><button class="text-button history-back-button" type="button" data-go-view="papers">← 返回每周论文</button><p class="eyebrow">仅保留过去 4 个自然周 · 按 DOI 或题名去重</p><h1 id="paperHistoryTitle">历史回顾</h1></div><span class="status-pill">不含本周推荐</span></div>
+          <section class="quality-notice"><strong>回顾范围</strong><span>按周一至周日归档最近四周，并使用当前严格白名单重新过滤；不再符合规则的历史论文不会展示。</span></section>
+          <div id="paperHistoryFeed" class="content-feed paper-feed"></div>
+        </section>
+
+        <section class="view" id="libraryView" data-view-panel="library" aria-labelledby="libraryTitle">
+          <div class="page-heading"><div><p class="eyebrow">本地文件 · 模块索引 · 自定义归类</p><h1 id="libraryTitle">统一资料库</h1></div><div class="inline-actions"><button class="button" id="createLibraryFolderButton" type="button">新建文件夹</button><button class="button" id="uploadLibraryFolderButton" type="button">扫描文件夹</button><button class="button primary" id="uploadLibraryFilesButton" type="button">＋ 上传资料</button></div></div>
+          <div class="library-workspace"><aside class="panel library-folder-panel"><div class="panel-heading"><div><span class="section-kicker">主文件夹</span><h2>资料分组</h2></div></div><button class="library-folder-row active" type="button" data-library-folder="all"><span>全部资料</span><b id="libraryAllCount">0</b></button><div id="libraryFolderTree"></div></aside><div class="library-content"><div class="library-toolbar"><button class="button" id="openLibraryAdd" type="button">新增链接或元数据</button><input id="libraryFilter" type="search" placeholder="搜索标题、来源、文件类型或标签"></div><div id="libraryBreadcrumb" class="library-breadcrumb">全部资料</div><div id="libraryList" class="library-list"></div></div></div>
+        </section>
+
+        <section class="view" id="healthView" data-view-panel="health" aria-labelledby="healthTitle">
+          <div class="page-heading"><div><p class="eyebrow">饮水 · 生理期 · 运动</p><h1 id="healthTitle">运动健康总览</h1></div><span class="status-pill">数据仅保存在本地</span></div>
+          <div class="health-overview-grid">
+            <section class="panel health-water-panel">
+              <div class="panel-heading"><div><span class="section-kicker">今日饮水</span><h2 id="healthWaterMetric">800 / 2000 ml</h2></div><button class="text-button" id="undoWaterButton" type="button">撤销</button></div>
+              <div class="water-ring-wrap"><div class="water-ring" id="waterRing"><strong id="waterPercent">40%</strong><span>完成</span></div><div><p>08:00–23:00 每 120 分钟提醒，达标后停止。</p><div class="quick-water health-quick-water"><button type="button" data-water="100">+100</button><button type="button" data-water="200">+200</button><button type="button" data-water="300">+300</button><button type="button" data-water="500">+500</button></div></div></div>
+            </section>
+            <section class="panel private-content">
+              <div class="panel-heading"><div><span class="section-kicker">周期状态</span><h2 id="cyclePredictionTitle">预测区间</h2></div><span class="status-tag warning" id="cyclePredictionStatus">数据不足</span></div>
+              <p class="health-copy" id="cyclePredictionCopy">完整记录少于 3 个周期，暂不提供确定日期。继续记录开始日、结束日和身体状态后生成区间预测。</p>
+              <button class="button subtle block" id="addCyclePeriodButton" type="button">新增周期记录</button>
+            </section>
+            <section class="panel">
+              <div class="panel-heading"><div><span class="section-kicker">本周运动</span><h2 id="exerciseMetric">1 / 2 次 · 45 / 90 分钟</h2></div></div>
+              <form id="exerciseForm" class="exercise-form"><label>运动类型<select id="exerciseType"><option>步行</option><option>跑步</option><option>力量训练</option><option>瑜伽或拉伸</option><option>骑行或游泳</option></select></label><label>时长（分钟）<input id="exerciseDuration" type="number" min="1" max="300" value="30"></label><button class="button primary" type="submit">记录运动</button></form>
+            </section>
+          </div>
+          <section class="panel cycle-calendar-panel private-content">
+            <div class="panel-heading"><div><span class="section-kicker">月历记录</span><h2 id="cycleCalendarTitle">周期日历</h2></div><div class="inline-actions"><button class="icon-button" id="previousCycleMonthButton" type="button" aria-label="上个月">←</button><button class="button" id="todayCycleMonthButton" type="button">本月</button><button class="icon-button" id="nextCycleMonthButton" type="button" aria-label="下个月">→</button></div></div>
+            <div class="cycle-legend" aria-label="周期图例"><span><i class="recorded"></i>已记录周期</span><span><i class="predicted"></i>预测区间</span><span>预测仅用于个人记录与计划提示</span></div>
+            <div class="cycle-weekdays" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+            <div id="cycleCalendarGrid" class="cycle-calendar-grid"></div>
+            <div class="cycle-calendar-footer"><div id="cycleStatistics" class="cycle-statistics"></div><button class="button" id="openCycleHistoryButton" type="button">查看历史记录</button></div>
+            <div id="cycleHistoryList" class="cycle-history-list" hidden></div>
+          </section>
+          <section class="panel">
+            <div class="panel-heading"><div><span class="section-kicker">最近记录</span><h2>健康时间线</h2></div><span class="muted-note">仅显示聚合与中性描述</span></div>
+            <div id="healthTimeline" class="health-timeline"></div>
+          </section>
+        </section>
+
+        <section class="view" id="reviewView" data-view-panel="review" aria-labelledby="reviewTitle">
+          <div class="review-page-head"><div><p class="eyebrow">今日复盘</p><h1 id="reviewHeadline">回看今天，为明天留下清晰的一步</h1><button class="text-button" id="editReviewHeadline" type="button">编辑这句话</button></div><div class="review-date-tools"><label>复盘日期<input id="reviewDate" type="date"></label><button class="button" id="openReviewHistory" type="button">历史记录</button></div></div>
+          <section id="reviewEntryState" class="private-content">
+            <section class="review-summary" id="reviewSummaryStrip"><div><span>任务</span><b id="reviewTaskSummary">0 / 0</b></div><div><span>关键任务</span><b id="reviewKeySummary">0 / 0</b></div><div><span>英语</span><b id="reviewEnglishSummary">0 词</b></div><div><span>饮水</span><b id="reviewWaterSummary">0 ml</b></div><div><span>运动</span><b id="reviewExerciseSummary">0 分钟</b></div></section>
+            <div id="reviewMonthEnd" class="review-month-end" hidden><div><b>本月最后一天</b><span>完成复盘后可进入月总结与下月计划。</span></div><button class="button" type="button" data-go-view="reports">查看月总结</button></div>
+            <form id="reviewForm" class="review-form review-entry-form">
+              <section class="panel review-question-panel"><div class="panel-heading"><div><span class="section-kicker">三项核心问题</span><h2>简单记录最重要的事实</h2></div><span id="reviewDraftStatus" class="status-tag">草稿自动保存</span></div>
+                <label class="review-question">今天完成了什么？ *<textarea name="completed" required rows="3" placeholder="记录完成事项和可验证成果"></textarea></label>
+                <label class="review-question">今天最大的阻碍是什么？ *<textarea name="obstacle" required rows="3" placeholder="记录最影响推进的问题"></textarea></label>
+                <label class="review-question">明天最重要的一件事？ *<textarea name="tomorrow" required rows="3" placeholder="只写一件最重要的事"></textarea></label>
+                <details class="review-more"><summary>进一步复盘</summary><div class="review-more-grid">
+                  <label class="review-question">今天学到了什么？<textarea name="learned" rows="3"></textarea></label><label class="review-question">今天最重要的成果或进展？<textarea name="achievement" rows="3"></textarea></label><label class="review-question">哪项任务比预计更难或更容易？<textarea name="difficulty" rows="3"></textarea></label><label class="review-question">明天需要改进什么？<textarea name="improvement" rows="3"></textarea></label><label class="review-question review-free">自由记录（支持 Markdown）<textarea name="free" rows="5"></textarea></label>
+                </div></details>
+              </section>
+              <section class="panel review-ratings-panel"><div class="panel-heading"><div><span class="section-kicker">主观量表</span><h2>选择今天的状态</h2></div><span class="muted-note">1 至 5 级</span></div><div class="rating-grid" id="ratingGrid"></div></section>
+              <div class="review-sticky-actions"><span id="reviewCompletionHint">需完成三项核心问题和五项量表</span><button class="button" id="saveReviewDraft" type="button">保存草稿</button><button class="button primary" type="submit">提交今日复盘</button></div>
+            </form>
+          </section>
+          <section id="reviewResultState" class="review-result private-content" hidden>
+            <div class="review-result-meta"><div><span id="reviewResultStatus">已按时提交</span><b id="reviewResultTime">--</b></div><div><span>版本</span><b id="reviewResultVersion">V1</b></div><div><span>存储</span><b>SQLite 本地保存</b></div><div class="review-result-actions"><button class="button" id="editSubmittedReview" type="button">编辑复盘</button><button class="button" id="exportReview" type="button">导出 Markdown</button></div></div>
+            <section class="review-encouragement"><span>今日反馈</span><h2 id="reviewEncouragement">你为今天留下了完整记录。</h2><p id="reviewEncouragementBasis">依据已提交的任务和复盘事实生成。</p></section>
+            <section class="panel review-achievements"><div class="panel-heading"><div><span class="section-kicker">今日成果总览</span><h2>完成情况与真实证据</h2></div></div><div id="reviewVisualSummary" class="review-visual-grid"></div><div id="reviewEvidenceGallery" class="review-evidence-gallery"></div></section>
+            <div class="review-result-grid"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">我的复盘</span><h2>核心回答与状态</h2></div></div><div id="reviewAnswerSnapshot" class="review-answer-snapshot"></div><details><summary>进一步复盘与自由记录</summary><div id="reviewFurtherSnapshot"></div></details></section>
+              <aside class="review-insight-stack"><section class="panel"><div class="panel-heading"><div><span class="section-kicker">AI 复盘建议</span><h2>事实、建议与依据</h2></div><button class="button" id="retryReviewAi" type="button">生成建议</button></div><div id="reviewAiResult" class="review-ai-result"><p>复盘已安全保存。AI 建议可稍后生成，不影响本次提交。</p></div></section><section class="panel"><div class="panel-heading"><div><span class="section-kicker">明日行动</span><h2>确认后写入待办</h2></div></div><div id="reviewActionDrafts"></div><button class="button primary block" id="writeReviewActions" type="button">预览并写入所选行动</button></section></aside>
+            </div><div class="review-bottom-actions"><button class="button" type="button" data-go-view="overview">返回总览</button><button class="button" id="reviewHistoryBottom" type="button">查看历史</button></div>
+          </section>
+        </section>
+
+        <section class="view ai-assistant-view" id="aiView" data-view-panel="ai" aria-labelledby="aiChatTitle">
+          <div class="ai-assistant-header"><div><p class="eyebrow">工作台数据按需授权 · 建议需人工确认</p><h1 id="aiChatTitle">成长规划 AI 助手</h1><p>英语学习、资讯与论文追踪、健康评估、复盘建议和月度计划集中在这里。</p><div class="ai-runtime-row"><span id="aiRuntimeStatus" class="status-tag">正在检查 DeepSeek 配置</span><button class="button" id="openAiSettingsButton" type="button">打开 AI 设置</button></div></div><label>对话模型<select id="aiChatModel" aria-label="选择对话模型"><option value="configured">跟随 AI 设置</option></select></label></div>
+          <div class="ai-mode-switch" id="aiModeSwitch" role="group" aria-label="可用模型模式"></div>
+          <div id="aiChatMessages" class="ai-chat-messages ai-assistant-messages" aria-live="polite"><div class="ai-message assistant"><b>成长规划 AI 助手</b><p>可以直接提问，或让我结合工作台数据分析今天的进展。月底可生成月总结与下月计划草案。</p></div></div>
+          <form id="aiChatForm" class="ai-chat-composer ai-assistant-composer">
+            <textarea id="aiChatInput" rows="4" maxlength="12000" placeholder="给成长规划 AI 助手发送消息…" aria-label="对话消息" required></textarea>
+            <div class="ai-chat-tools"><label class="button file-button" title="添加图片或文件">添加附件<input id="aiChatFiles" type="file" multiple accept="image/*,.pdf,.txt,.md,.csv,.json,.doc,.docx,.xls,.xlsx,.ppt,.pptx"></label><span id="aiChatFileSummary" class="muted-note">未添加附件</span><button class="ai-send-button" id="sendAiChat" type="submit" aria-label="发送消息" title="发送消息">↑</button></div>
+            <p id="aiChatSendStatus" class="ai-send-status" aria-live="polite">发送时将使用当前问题、所选附件及必要的工作台聚合数据。</p>
+          </form>
+        </section>
+
+        <section class="view" id="settingsView" data-view-panel="settings" aria-labelledby="settingsTitle">
+          <div class="page-heading"><div><p class="eyebrow">本地优先 · 最小权限 · 可移植</p><h1 id="settingsTitle">设置与数据</h1></div><span class="status-pill">简体中文 · 中国时区</span></div>
+          <div class="settings-layout"><nav class="settings-nav" aria-label="设置分类"><button class="active" type="button" data-settings-tab="general">通用</button><button type="button" data-settings-tab="calendar">日历</button><button type="button" data-settings-tab="data">数据与文件</button><button type="button" data-settings-tab="recommendations">推荐同步</button><button type="button" data-settings-tab="ai">AI</button><button type="button" data-settings-tab="english-services">英语服务</button><button type="button" data-settings-tab="privacy">隐私与安全</button><button type="button" data-settings-tab="backup">备份</button><button type="button" data-settings-tab="notifications">通知</button><button type="button" data-settings-tab="about">关于</button></nav><div class="settings-content">
+            <section class="settings-panel active" data-settings-panel="general"><div class="setting-heading"><h2>通用</h2><p>外观、界面密度、日期规则和一级模块。</p></div><div class="setting-row"><div><strong>外观</strong><span>跟随系统或手动切换</span></div><select id="appearanceSetting"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></div><div class="setting-row"><div><strong>紧凑模式</strong><span>减少面板间距，适合小窗口</span></div><input id="compactSetting" type="checkbox" role="switch"></div><div class="setting-row"><div><strong>每周起始日</strong><span>影响日历和周总结周期</span></div><b>周一</b></div><div class="setting-heading subsection-heading"><h3>模块管理</h3><p>仅控制左侧栏一级模块。关闭不会删除本地数据，重新开启后恢复。</p></div><div id="moduleSettingsList" class="module-settings-list"></div><p id="moduleSettingsStatus" class="muted-note" aria-live="polite">更改后立即保存</p><div class="setting-row app-icon-setting"><div><strong>桌面图标</strong><span id="applicationIconStatus">正在检查自定义图标</span></div><div class="setting-inline-actions"><button class="button" id="resetApplicationIconButton" type="button">恢复默认</button><button class="button primary" id="chooseApplicationIconButton" type="button">选择图片</button></div></div><p class="muted-note">支持 PNG、JPG、HEIC、TIFF 和 WebP；图片会等比例缩放到 512×512，仅保存一份本地 PNG。</p></section>
+            <section class="settings-panel" data-settings-panel="calendar"><div class="setting-heading"><h2>日历</h2><p>配置工作时间段，并按需开启独立课程表。</p></div><div class="setting-row"><div><strong>课程表</strong><span>开启后日历将显示工作与课程表模式</span></div><input id="timetableEnabledSetting" type="checkbox" role="switch"></div><div class="calendar-setting-section" id="workCalendarPeriodSection"><div class="panel-heading"><div><span class="section-kicker">上午与下午</span><h3>日历时间段</h3></div><div class="setting-inline-actions"><button class="button" id="editCalendarPeriodsButton" type="button">修改日历时间段</button><button class="button" id="addCalendarPeriodButton" type="button">增加时间段</button></div></div><p class="muted-note">初始为空。名称和起止时间均可修改；重叠时间段不能保存。</p><div id="calendarPeriodList" class="calendar-period-list"></div><div class="settings-save-row"><span id="calendarSettingsStatus" class="muted-note" aria-live="polite">尚未修改</span><button class="button primary" id="saveCalendarSettingsButton" type="button">保存日历设置</button></div></div><div class="timetable-settings-section" id="timetableSettingsSection" hidden><div class="setting-heading"><h3>课程表设置</h3><p>设置学期、课程节次和课程信息。关闭课程表不会删除这些数据。</p></div><div class="calendar-settings-grid"><label>学期名称<input id="semesterNameSetting" maxlength="40" placeholder="例如：研二上"></label><label>学期周数<input id="semesterWeeksSetting" type="number" min="1" max="40" value="20"></label><label>开学日期<input id="semesterStartSetting" type="date"></label></div><div class="panel-heading timetable-subheading"><div><span class="section-kicker">上午与下午</span><h3>课程时间段</h3></div><button class="button" id="addCoursePeriodButton" type="button">增加节次</button></div><div id="coursePeriodList" class="calendar-period-list"></div><div class="panel-heading timetable-subheading"><div><span class="section-kicker">按周次生效</span><h3>课程设置</h3></div><button class="button" id="addCourseButton" type="button">增加课程</button></div><div id="courseList" class="course-setting-list"></div><div class="settings-save-row"><span id="timetableSettingsStatus" class="muted-note" aria-live="polite">尚未设置课程表</span><button class="button primary" id="saveTimetableSettingsButton" type="button">保存课程表设置</button></div></div></section>
+            <section class="settings-panel" data-settings-panel="data"><div class="setting-heading"><h2>数据与文件</h2><p>核心记录保存在本地 SQLite；密钥独立保存在 macOS 钥匙串。</p></div><div class="setting-row database-location-row"><div><strong>SQLite 数据库</strong><span id="databaseStorageStatus">正在连接数据库</span></div><code id="databasePathLabel">正在读取路径</code></div><div class="database-actions"><button class="button" id="openDatabaseFolderButton" type="button">打开所在文件夹</button><button class="button primary" id="changeDatabaseLocationButton" type="button">迁移数据库位置</button></div><p class="muted-note database-migration-note">迁移会复制并校验现有数据库，成功后切换到新位置；旧文件保留作为迁移备份，不自动删除。</p><div class="setting-row database-location-row"><div><strong>资料库文件</strong><span>论文 PDF 等由用户明确导入的文件</span></div><code id="libraryStoragePathLabel">正在读取路径</code></div><div class="database-actions"><span id="libraryStorageStatus" class="muted-note">本地存储</span><button class="button primary" id="changeLibraryStorageButton" type="button">更改资料库存储位置</button></div><p class="muted-note database-migration-note">更改位置时可选择只影响新文件，或复制并校验现有受管文件后更新路径；外部引用文件不会移动，旧受管文件保留为安全副本。</p><div class="setting-row database-location-row"><div><strong>CET-6 训练资料</strong><span>试卷、答案和听力音频的独立本地目录</span></div><code id="cet6StoragePathLabel">正在读取路径</code></div><div class="database-actions"><span id="cet6StorageStatus" class="muted-note">默认复制到本地资料库</span><button class="button primary" id="changeCet6StorageButton" type="button">更改 CET-6 存储位置</button></div><div class="setting-row"><div><strong>当前状态大小</strong><span id="prototypeDataSize">正在计算</span></div><b>SQLite 本地存储</b></div><div class="setting-row"><div><strong>附件默认规则</strong><span>普通附件引用原文件；论文和训练资料可确认后复制到资料库</span></div><b>逐项确认</b></div><div class="setting-row"><div><strong>回收站</strong><span>删除后保留30天</span></div><b>按模块独立管理</b></div></section>
+            <section class="settings-panel" data-settings-panel="recommendations"><div class="setting-heading"><h2>推荐同步</h2><p>热点偏好与论文检索偏好分别保存；来源不足时不会用合成内容补足数量。</p></div><fieldset class="recommendation-options"><legend>今日热点主题</legend><label><input type="checkbox" data-news-theme-setting="物流工程" checked>物流工程</label><label><input type="checkbox" data-news-theme-setting="管理工程" checked>管理工程</label><label><input type="checkbox" data-news-theme-setting="AI发展" checked>AI发展</label><label><input type="checkbox" data-news-theme-setting="低空经济" checked>低空经济</label></fieldset><fieldset class="recommendation-options"><legend>来源层级</legend><label><input type="checkbox" data-news-tier-setting="P0" checked>P0 政策原文</label><label><input type="checkbox" data-news-tier-setting="P1" checked>P1 权威解读</label><label><input type="checkbox" data-news-tier-setting="P2" checked>P2 行业补充</label><label><input type="checkbox" data-news-tier-setting="P3">P3 观点参考</label></fieldset><fieldset class="recommendation-options"><legend>地域</legend><label><input type="checkbox" data-news-region-setting="国内" checked>国内来源</label><label><input type="checkbox" data-news-region-setting="国际" checked>国际来源</label></fieldset><details class="manual-watchlist"><summary>公众号人工关注清单</summary><p>中国政府网、国家发展改革委、交通运输部、工信微报、中国民航局、国家邮政局、中国信通院CAICT、中国物流与采购联合会、机器之心。公众号不作为自动抓取源，优先回溯同主体官网。</p></details><div class="ai-form-stack"><label>论文检索主题<textarea id="recommendationTopicsSetting" rows="5" placeholder="每行一个主题"></textarea></label><label>论文排除清单<textarea id="recommendationExclusionsSetting" rows="5" placeholder="每行一个出版社或期刊名称"></textarea></label></div><div class="setting-row"><div><strong>DeepSeek加工</strong><span>只发送已获取的元数据与摘要，用于摘要、翻译、关联性与排序，不生成新闻事实</span></div><input id="recommendationAiSetting" type="checkbox" checked role="switch"></div><div class="settings-save-row"><span id="recommendationSettingsStatus" class="muted-note">修改后影响下一次同步</span><button class="button primary" id="saveRecommendationSettingsButton" type="button">保存推荐设置</button></div></section>
+            <section class="settings-panel" data-settings-panel="ai"><div class="ai-setting-header"><div><h2>执行者 AGENT</h2><p>负责执行研究任务，包括文献调研、内容分析与后续代码实验。</p></div><button class="button" id="testAiConnectionButton" type="button">测试连接</button></div><p id="aiConnectionStatus" class="ai-connection-notice" aria-live="polite">请先在底部保存 AI 设置，再测试连接</p><div class="ai-compact-row"><label>配置名称<input id="aiProfileSetting" autocomplete="off" maxlength="64" value="codex"></label><label>API 服务<select id="aiProviderSetting"><option value="OpenAI兼容API">OpenAI 兼容 API</option><option value="DeepSeek V4 Flash">DeepSeek V4 Flash</option><option value="DeepSeek官方API">DeepSeek 官方 API</option><option value="Anthropic官方API">Anthropic 官方 API</option></select></label></div><div class="ai-form-stack"><label>Base URL<input id="aiBaseUrlSetting" type="url" autocomplete="off" spellcheck="false" placeholder="https://www.mhcoding.xyz/"></label><p>工作台会通过原生安全请求连接服务；远程地址必须使用 HTTPS。</p><label>API Key<input id="aiKeySetting" type="password" autocomplete="new-password" spellcheck="false" placeholder="输入后保存到 macOS 钥匙串"></label><p>密钥不会写入工作台数据、日志、备份或开源文件，也不会从钥匙串读回页面。</p><label>Model ID<input id="aiModelSetting" autocomplete="off" spellcheck="false" placeholder="claude-opus-4-6"></label></div><div class="ai-key-status"><div><span id="aiKeyStatus" class="status-tag">正在检查钥匙串</span><span id="aiDesktopHint" class="muted-note">密钥不会显示或读回页面</span></div></div><div class="setting-row"><div><strong>调用前预览</strong><span>每次显示将发送的数据类别、附件、服务和模型，可取消调用</span></div><input type="checkbox" checked disabled role="switch"></div><div class="setting-row"><div><strong>本月预算（元）</strong><span>达到阈值后暂停 AI 调用；0 表示暂不设置</span></div><input id="aiBudgetSetting" type="number" min="0" step="1" value="0" aria-label="AI月度预算"></div><div class="ai-settings-footer"><button class="button" id="deleteAiKeyButton" type="button">删除钥匙串密钥</button><button class="button primary" id="saveAiConfigButton" type="button">保存 AI 设置</button></div></section>
+            <section class="settings-panel" data-settings-panel="english-services"><div class="ai-setting-header"><div><h2>有道词典服务</h2><p>使用有道智云官方文本翻译 API，为单词释义核对和词典跳转提供参考。</p></div><button class="button" id="testYoudaoButton" type="button">测试连接</button></div><p id="youdaoConnectionStatus" class="ai-connection-notice neutral" aria-live="polite">正在检查配置</p><div class="ai-form-stack"><label>应用 ID<input id="youdaoAppIdSetting" autocomplete="off" spellcheck="false" maxlength="256" placeholder="有道智云应用 ID"></label><p>应用 ID 与应用密钥均只保存到 macOS 钥匙串，不写入工作台数据库。</p><label>应用密钥<input id="youdaoAppSecretSetting" type="password" autocomplete="new-password" spellcheck="false" maxlength="1024" placeholder="有道智云应用密钥"></label><p>工作台原生层生成 SHA-256 v3 签名，页面无法读回密钥。</p></div><div class="ai-key-status"><div><span id="youdaoKeyStatus" class="status-tag warning">尚未配置</span><span class="muted-note">需在有道智云创建应用，不等同于有道翻译 App 登录账号</span></div></div><div class="ai-settings-footer"><button class="button" id="deleteYoudaoButton" type="button">删除有道凭据</button><button class="button primary" id="saveYoudaoButton" type="button">保存有道设置</button></div></section>
+            <section class="settings-panel" data-settings-panel="privacy"><div class="setting-heading"><h2>隐私与安全</h2><p>默认最小联网，健康和复盘数据保持本地。</p></div><div class="setting-row"><div><strong>崩溃与分析报告</strong><span>默认关闭，不发送个人内容</span></div><input type="checkbox" disabled role="switch"></div><div class="setting-row"><div><strong>敏感通知</strong><span>锁屏只显示中性文案</span></div><input type="checkbox" checked disabled role="switch"></div><div class="setting-row"><div><strong>隐私协议</strong><span>版本 2026-08-02 · 本地优先与联网服务披露</span></div><button class="button" id="openPrivacyPolicyButton" type="button">查看协议</button></div><button class="button" id="openPrivacyMode" type="button">切换总览隐私模式</button></section>
+            <section class="settings-panel" data-settings-panel="backup"><div class="setting-heading"><h2>备份与恢复</h2><p>每日增量、每周完整；完整包使用用户密码加密。</p></div><div class="backup-status"><div><span>最近快照</span><strong id="lastBackupLabel">尚未创建</strong></div><div><span>模拟快照大小</span><strong id="backupSizeLabel">0 B</strong></div></div><button class="button primary" id="createSnapshotButton" type="button">创建模拟快照元数据</button><p class="muted-note">原型只记录时间和当前本地数据字节数，不创建或复制任何备份文件。</p></section>
+            <section class="settings-panel" data-settings-panel="notifications"><div class="setting-heading"><h2>通知</h2><p>正式版通过macOS系统通知发送。</p></div><div class="setting-row"><div><strong>普通任务提醒</strong><span>提前15分钟</span></div><input type="checkbox" checked role="switch"></div><div class="setting-row"><div><strong>勿扰时段</strong><span>23:00–08:00</span></div><input type="checkbox" checked role="switch"></div><div class="setting-row"><div><strong>每日复盘</strong><span>22:30轻提示</span></div><input type="checkbox" checked role="switch"></div><div class="setting-heading subsection-heading"><h3>CET-6 训练</h3><p>计时提示和电脑休眠行为。</p></div><div class="setting-row"><div><strong>训练提示音</strong><span>计时结束、模块切换和提前5分钟提醒</span></div><div class="setting-inline-actions"><button class="button" id="testCet6SoundButton" type="button">测试提示音</button><input id="cet6SoundSetting" type="checkbox" checked role="switch"></div></div><div class="setting-row"><div><strong>电脑休眠</strong><span>使用工作台音频时始终暂停</span></div><select id="cet6SleepSetting"><option value="pause">暂停计时</option><option value="continue">外部音频或无音频时继续计时</option></select></div></section>
+            <section class="settings-panel" data-settings-panel="about"><div class="setting-heading"><h2>关于</h2><p>个人成长工作台交互原型。</p></div><div class="setting-row"><div><strong>原型版本</strong><span>无依赖HTML/CSS/JavaScript</span></div><b>0.5</b></div><div class="setting-row"><div><strong>桌面技术栈</strong><span>Tauri + React + TypeScript + SQLite</span></div><b>准备中</b></div><div class="setting-row"><div><strong>开源隔离</strong><span>个人数据、密钥、版权资料和日志不进入仓库</span></div><b>已定义</b></div></section>
+            <section class="settings-panel recycle-settings-panel" data-settings-panel="data"><div class="setting-row"><div><strong>资料库回收站</strong><span id="recycleBinStatus">本地保留30天，到期自动删除</span></div><button class="button" id="openRecycleBinButton" type="button">查看回收站</button></div></section>
+          </div></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="moduleSetupDialog" class="module-setup-dialog">
+    <form id="moduleSetupForm">
+      <div class="dialog-heading"><div><span class="section-kicker">首次使用</span><h2>选择需要的工作台模块</h2></div></div>
+      <p class="muted-note">这里只设置左侧栏的大板块。工作台总览和设置始终保留，之后可在“设置 → 通用 → 模块管理”修改。</p>
+      <div class="module-preset-actions"><button class="button" type="button" data-module-preset="recommended">推荐组合</button><button class="button" type="button" data-module-preset="all">全选</button><button class="button" type="button" data-module-preset="none">全不选</button></div>
+      <div id="moduleSetupList" class="module-setup-list"></div>
+      <div class="dialog-actions"><span id="moduleSetupStatus" class="muted-note" aria-live="polite">选择不会删除或上传任何数据</span><button class="button primary" type="submit">进入工作台</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="quickAddDialog">
+    <form method="dialog" id="quickAddForm">
+      <div class="dialog-heading"><div><span class="section-kicker">快速新增</span><h2>创建一项记录</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div>
+      <label>类型<select id="addType"><option value="task">任务</option><option value="event">日程</option><option value="study">学习记录</option><option value="exercise">运动</option><option value="favorite">收藏</option><option value="evidence">成果文件</option></select></label>
+      <label>标题<input id="addTitle" required maxlength="80" placeholder="输入标题"></label>
+      <div class="form-grid"><label>类别<select id="addCategory"><option>科研/小论文</option><option>毕业论文</option><option>CET-6</option><option>IELTS</option><option>AI/数据技能</option><option>健康</option><option>个人生活</option></select></label><label>优先级<select id="addPriority"><option>高</option><option selected>中</option><option>低</option></select></label></div>
+      <div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" id="saveQuickAdd" value="default">保存</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="goalDialog">
+    <form method="dialog" id="goalForm">
+      <div class="dialog-heading"><div><span class="section-kicker">目标与规划中心</span><h2>新增目标</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div>
+      <label>目标名称 *<input id="goalTitleInput" required maxlength="100" placeholder="例如：CET-6达到500分"></label>
+      <div class="form-grid"><label>目标类型 *<select id="goalTypeInput"><option>考试目标</option><option>科研目标</option><option>阶段目标</option><option>能力目标</option><option>健康目标</option><option>个人目标</option></select></label><label>截止日期<input id="goalDeadlineInput" type="date"></label></div>
+      <label>下一里程碑 *<input id="goalMilestoneInput" required maxlength="160" placeholder="写下下一项可验证成果"></label>
+      <div class="form-grid"><label>初始进度（%）<input id="goalProgressInput" type="number" min="0" max="100" value="0"></label><label>当前状态<select id="goalStateInput"><option>证据不足</option><option selected>正常</option><option>提前</option><option>轻度迟缓</option><option>严重迟缓</option><option>停滞</option></select></label></div>
+      <p id="goalFormError" class="form-error" aria-live="polite"></p>
+      <div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">保存目标</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="calendarItemDialog">
+    <form method="dialog" id="calendarItemForm">
+      <div class="dialog-heading"><div><span class="section-kicker">工作日历</span><h2 id="calendarItemDialogTitle">增加工作项</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div>
+      <input id="calendarItemId" type="hidden">
+      <label>名称 *<input id="calendarItemTitle" required maxlength="80" placeholder="输入工作项名称"></label>
+      <div class="form-grid"><label>日期 *<input id="calendarItemDate" type="date" required></label><label>星期 *<select id="calendarItemWeekday" required><option value="1">周一</option><option value="2">周二</option><option value="3">周三</option><option value="4">周四</option><option value="5">周五</option><option value="6">周六</option><option value="0">周日</option></select></label></div>
+      <div class="form-grid"><label>开始时间 *<input id="calendarItemStart" type="time" required></label><label>结束时间 *<input id="calendarItemEnd" type="time" required></label></div>
+      <label>地点<input id="calendarItemLocation" maxlength="80" placeholder="可选"></label>
+      <label>工作内容<textarea id="calendarItemContent" rows="4" maxlength="600" placeholder="可选"></textarea></label>
+      <p id="calendarItemError" class="form-error" aria-live="polite"></p>
+      <div class="dialog-actions"><button class="button danger-button" id="deleteCalendarItemButton" type="button">删除</button><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">保存</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="courseDialog">
+    <form method="dialog" id="courseForm">
+      <div class="dialog-heading"><div><span class="section-kicker">课程表</span><h2 id="courseDialogTitle">增加课程</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div>
+      <input id="courseId" type="hidden">
+      <label>课程名 *<input id="courseName" required maxlength="80" placeholder="例如：高等数学"></label>
+      <div class="form-grid"><label>星期 *<select id="courseWeekday"><option value="1">周一</option><option value="2">周二</option><option value="3">周三</option><option value="4">周四</option><option value="5">周五</option><option value="6">周六</option><option value="0">周日</option></select></label><label>地点<input id="courseLocation" maxlength="80" placeholder="例如：3号楼206"></label></div>
+      <div class="form-grid"><label>开始节 *<select id="courseStartPeriod"></select></label><label>结束节 *<select id="courseEndPeriod"></select></label></div>
+      <div class="form-grid"><label>上课周数<select id="courseWeekMode"><option value="all">全部周</option><option value="odd">单周</option><option value="even">双周</option><option value="custom">自定义周次</option></select></label><label>自定义周次<input id="courseCustomWeeks" maxlength="100" placeholder="例如：1-8,10,12"></label></div>
+      <label>颜色<select id="courseColor"><option value="#6f8f87">松石灰</option><option value="#7d8299">雾紫灰</option><option value="#8b776f">暖灰</option><option value="#69839a">湖蓝灰</option><option value="#7f956e">草木灰</option><option value="#9a7b88">豆沙灰</option><option value="#85799a">鸢尾灰</option><option value="#6f9295">青灰</option><option value="#998467">麦穗灰</option><option value="#748d72">苔绿灰</option><option value="#8f7780">玫瑰灰</option><option value="#71849b">钢蓝灰</option><option value="#95876f">岩土灰</option><option value="#778b84">森林灰</option><option value="#878787">中性灰</option></select></label>
+      <p id="courseFormError" class="form-error" aria-live="polite"></p>
+      <div class="dialog-actions"><button class="button danger-button" id="deleteCourseButton" type="button">删除</button><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">保存课程</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="searchDialog">
+    <form method="dialog">
+      <label class="search-field"><span aria-hidden="true">⌕</span><input id="globalSearch" autocomplete="off" placeholder="搜索任务、目标、资料和复盘"></label>
+      <div id="searchResults" class="search-results"></div>
+      <div class="dialog-actions"><span class="muted-note">按 Esc 关闭</span><button class="button" type="button" data-dialog-close>关闭</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="libraryAddDialog">
+    <form method="dialog" id="libraryAddForm">
+      <div class="dialog-heading"><div><span class="section-kicker">仅保存元数据与链接</span><h2>新增资料</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div>
+      <label>标题<input id="libraryTitleInput" required maxlength="120" placeholder="资料标题"></label>
+      <label>链接或本地路径<input id="libraryLinkInput" maxlength="500" placeholder="https:// 或文件路径（可选）"></label>
+      <div class="form-grid"><label>类型<select id="libraryTypeInput"><option>网页</option><option>论文</option><option>政策与行业报告</option><option>视频</option><option>图书</option><option>本地文件</option></select></label><label>主分类<select id="libraryCategoryInput"><option>小论文</option><option>毕业论文</option><option>英语学习</option><option>物流资讯</option><option>个人成长</option></select></label><label>保存到文件夹<select id="libraryFolderInput"></select></label></div>
+      <div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" id="saveLibraryItem" value="default">保存元数据</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="libraryFolderDialog"><form id="libraryFolderForm" method="dialog"><div class="dialog-heading"><div><span class="section-kicker">支持多级归类</span><h2 id="libraryFolderDialogTitle">新建文件夹</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><label>文件夹名称 *<input id="libraryFolderName" required maxlength="60"></label><label>上级文件夹<select id="libraryFolderParent"></select></label><input id="libraryFolderEditingId" type="hidden"><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">保存文件夹</button></div></form></dialog>
+
+  <dialog id="libraryImportDialog" class="wide-dialog"><form id="libraryImportForm" method="dialog"><div class="dialog-heading"><div><span class="section-kicker">本地存储 · 指纹查重</span><h2>导入资料</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><div id="libraryPendingFiles" class="research-import-list"></div><div class="form-grid"><label>保存到文件夹<select id="libraryImportFolder"></select></label><label>保存方式<select id="libraryImportMode"><option value="copy">复制到资料库（推荐）</option><option value="reference">仅引用原文件</option></select></label></div><p id="libraryImportStatus" class="form-error" aria-live="polite"></p><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">确认导入</button></div></form></dialog>
+
+  <dialog id="privacyPolicyDialog" class="policy-dialog">
+    <form method="dialog">
+      <div class="dialog-heading"><div><span class="section-kicker">版本 2026-08-14</span><h2>个人成长工作台隐私协议</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div>
+      <div class="policy-content"><p>工作台以本地存储为默认原则，不要求注册账户。任务、目标、学习、健康、复盘与资料元数据保存在用户选择的 SQLite 数据库中。</p><h3>联网服务</h3><p>热点与论文只访问用户启用的公开来源。启用推荐AI加工后，仅把检索到的题名、来源、日期、摘要和DOI发送给用户自己的AI服务。应用完全退出后当前版本不会联网。</p><h3>密钥与附件</h3><p>API 密钥保存在 macOS 钥匙串，不写入数据库或开源仓库。资料上传可选择复制到用户指定的本地资料库或仅引用原文件；统一资料库的模块索引不重复复制文件，也不会静默上传附件。</p><h3>健康与复盘</h3><p>健康和原始复盘默认仅保存在本机，不进入分享视图。应用不提供医疗诊断或药物建议。</p><h3>用户控制</h3><p>用户可以关闭模块、迁移数据库或资料库、删除凭据和本地数据。关闭模块不会删除历史资料；受管文件删除进入本地回收站保留30天，外部引用文件不会被工作台删除。</p><h3>开源版本</h3><p>源码仓库只包含源码、空数据库与合成示例，不包含个人记录、密钥、日志、版权论文、考试资料或第三方词典批量数据。</p></div>
+      <div class="dialog-actions"><span class="muted-note">完整文本同时收录于仓库 PRIVACY.md</span><button class="button primary" type="button" data-dialog-close>我知道了</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="paperLibraryDialog" class="paper-library-dialog">
+    <form method="dialog" id="paperLibraryForm"><div class="dialog-heading"><div><span class="section-kicker">确认后加入统一资料库</span><h2>保存论文</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><div id="paperLibraryMetadata" class="paper-library-metadata"></div><label>阅读级别<select id="paperReadingLevel"><option>略读</option><option selected>精读</option><option>重点精读</option></select></label><div class="paper-pdf-picker"><div><strong>论文 PDF</strong><span id="paperPdfStatus">未选择，可稍后补充</span></div><button class="button" id="choosePaperPdfButton" type="button">选择 PDF</button></div><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" id="confirmPaperLibraryButton" type="button">加入资料库</button></div></form>
+  </dialog>
+  <dialog id="cyclePeriodDialog"><form id="cyclePeriodForm" method="dialog"><div class="dialog-heading"><div><span class="section-kicker">仅保存在本地</span><h2 id="cyclePeriodDialogTitle">新增周期记录</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><input id="cyclePeriodId" type="hidden"><div class="form-grid"><label>开始日期 *<input id="cyclePeriodStart" type="date" required></label><label>结束日期 *<input id="cyclePeriodEnd" type="date" required></label><label>流量等级<select id="cyclePeriodFlow"><option value="">未记录</option><option>少</option><option>中</option><option>多</option></select></label><label>疼痛等级<select id="cyclePeriodPain"><option value="">未记录</option><option value="1">1 轻微</option><option value="2">2</option><option value="3">3 中等</option><option value="4">4</option><option value="5">5 严重</option></select></label><label>情绪<input id="cyclePeriodMood" maxlength="80"></label><label>精力<select id="cyclePeriodEnergy"><option value="">未记录</option><option value="1">1 很低</option><option value="2">2</option><option value="3">3 一般</option><option value="4">4</option><option value="5">5 很好</option></select></label></div><label>症状<input id="cyclePeriodSymptoms" maxlength="200" placeholder="可选，以逗号分隔"></label><label>用药与备注<textarea id="cyclePeriodNotes" rows="3"></textarea></label><label class="inline-checkbox"><input id="cyclePeriodExclude" type="checkbox">本次为异常记录，不用于周期预测</label><p class="form-error" id="cyclePeriodError" aria-live="polite"></p><div class="dialog-actions"><button class="button danger" id="deleteCyclePeriodButton" type="button" hidden>删除记录</button><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">保存记录</button></div></form></dialog>
+
+  <dialog id="recycleBinDialog" class="recycle-bin-dialog">
+    <form method="dialog"><div class="dialog-heading"><div><span class="section-kicker">本地保留 30 天</span><h2>资料库回收站</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><div id="recycleBinList" class="recycle-bin-list"></div><div class="dialog-actions"><button class="button" id="emptyRecycleBinButton" type="button">清空回收站</button><button class="button primary" type="button" data-dialog-close>完成</button></div></form>
+  </dialog>
+
+  <dialog id="wordEditDialog"><form method="dialog" id="wordEditForm"><div class="dialog-heading"><div><span class="section-kicker">保存到本地词库</span><h2 id="wordEditTitle">编辑中文释义</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><label>中文释义<textarea id="wordEditMeanings" rows="5" placeholder="多个释义使用；分隔"></textarea></label><p class="muted-note">至少保留一个释义；历史学习记录保留当时的释义快照。</p><div class="dialog-actions"><button class="button" id="deleteEditingWordButton" type="button">删除该词</button><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" id="saveWordMeaningsButton" type="submit">保存释义</button></div></form></dialog>
+
+  <dialog id="wordManagerDialog" class="word-manager-dialog"><form method="dialog"><div class="dialog-heading"><div><span class="section-kicker">本地词库</span><h2 id="wordManagerTitle">全部词项</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><input id="wordManagerSearch" type="search" placeholder="搜索单词、短语或中文释义"><div id="wordManagerList" class="word-manager-list"></div><div class="dialog-actions"><button class="button primary" type="button" data-dialog-close>完成</button></div></form></dialog>
+
+  <dialog id="wordTrashDialog"><form method="dialog"><div class="dialog-heading"><div><span class="section-kicker">本地保留 30 天</span><h2>词汇回收站</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><div id="wordTrashList" class="word-manager-list"></div><div class="dialog-actions"><button class="button primary" type="button" data-dialog-close>完成</button></div></form></dialog>
+
+  <dialog id="wordCheckpointDialog" class="word-checkpoint-dialog"><form method="dialog"><div class="dialog-heading"><div><span class="section-kicker">第30天检查点</span><h2>确认下一轮学习名单</h2></div></div><p class="muted-note">错误和不会的词默认进入下一轮；删除项可在本页回收站恢复。关闭应用后仍会保留待确认状态。</p><div id="wordCheckpointList" class="word-manager-list"></div><details class="checkpoint-trash"><summary>本页回收站（<span id="checkpointTrashCount">0</span>）</summary><div id="wordCheckpointTrash"></div></details><div class="dialog-actions"><button class="button" id="checkpointBackButton" type="button">返回继续选择</button><button class="button primary" id="confirmCheckpointButton" type="button">确认下一轮名单</button></div></form></dialog>
+
+  <dialog id="wordOverrideDialog"><form method="dialog" id="wordOverrideForm"><div class="dialog-heading"><div><span class="section-kicker">保留自动结果和改判历史</span><h2>人工改判</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><label>最终结果<select id="wordOverrideResult"><option value="correct">正确</option><option value="partial">部分正确</option><option value="wrong">错误</option><option value="unknown">不会</option></select></label><label>改判原因<input id="wordOverrideReason" required maxlength="160" placeholder="如：词库原释义不完整"></label><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">确认改判</button></div></form></dialog>
+
+  <dialog id="cet6ImportDialog" class="wide-dialog"><form method="dialog" id="cet6ImportForm"><div class="dialog-heading"><div><span class="section-kicker">文件名识别后需人工确认</span><h2>CET-6 资料配对</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><div id="cet6ImportSummary" class="import-summary"></div><div id="cet6ImportGroups" class="cet6-import-groups"></div><div class="import-storage-choice"><label><input type="radio" name="cet6StorageMode" value="copy" checked>复制到 CET-6 资料库（推荐）</label><label><input type="radio" name="cet6StorageMode" value="reference">仅引用原文件</label></div><p id="cet6ImportError" class="form-error" aria-live="polite"></p><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" id="confirmCet6ImportButton" type="submit">确认导入</button></div></form></dialog>
+
+  <dialog id="cet6SetupDialog" class="wide-dialog"><form method="dialog" id="cet6SetupForm"><div class="dialog-heading"><div><span class="section-kicker">确认后进入准备页，不会自动计时</span><h2 id="cet6SetupTitle">开始 CET-6 训练</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><input id="cet6TrainingKind" type="hidden" value="paper"><div class="cet6-setup-grid"><label>训练日期<input id="cet6TrainingDate" type="date" required></label><label>关联材料<select id="cet6TrainingMaterial"><option value="">不关联资料 / 纸质版 / 其他平台</option></select></label><label>计时模式<select id="cet6TimerMode"><option value="countdown">总倒计时（默认2小时25分）</option><option value="clock">模拟正计时 15:00–17:25</option><option value="modules">分模块计时</option></select></label><label>音频方式<select id="cet6AudioMode"><option value="none">本次不播放</option><option value="workspace">使用工作台播放</option><option value="external">使用其他设备播放</option></select></label><label id="cet6AudioAssetField" hidden>听力音频<select id="cet6AudioAsset"></select></label><label class="cet6-total-time">总时间<div class="duration-input"><input id="cet6Hours" type="number" min="0" max="5" value="2" aria-label="小时"><span>小时</span><input id="cet6Minutes" type="number" min="0" max="59" value="25" aria-label="分钟"><span>分钟</span></div></label></div><fieldset class="cet6-module-fieldset"><legend>训练模块与顺序</legend><p class="muted-note">勾选后可用箭头调整；套卷默认全选并按考试顺序。</p><div id="cet6ModuleOrder" class="cet6-module-order"></div></fieldset><div id="cet6ModuleTimes" class="cet6-module-times" hidden></div><label class="inline-checkbox"><input id="cet6SessionSound" type="checkbox" checked>本次启用计时与模块提示音</label><p id="cet6SetupError" class="form-error" aria-live="polite"></p><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">进入准备页</button></div></form></dialog>
+
+  <dialog id="cet6TrainingDialog" class="training-dialog"><div class="training-dialog-shell"><header><div><span id="cet6TrainingModeLabel" class="section-kicker">准备中</span><h2 id="cet6TrainingTitle">CET-6 训练</h2></div><button class="icon-button" id="cet6FocusButton" type="button" aria-label="切换专注模式" title="切换专注模式">□</button></header><div class="training-workspace"><section class="training-document"><div class="panel-heading"><div><span class="section-kicker">本地资料</span><h3 id="cet6TrainingMaterialLabel">未关联资料</h3></div></div><div id="cet6TrainingFiles" class="training-file-actions"></div><p class="muted-note">纸质版或其他平台训练可保持此区域为空。</p></section><aside class="training-controls"><span id="cet6TrainingStatus" class="status-tag">准备开始</span><time id="cet6TimerDisplay">02:25:00</time><strong id="cet6CurrentModuleLabel">整套试卷</strong><div id="cet6ModuleProgress" class="module-progress"></div><div id="cet6AudioControls" class="training-audio-controls" hidden><button type="button" data-cet6-audio="skip-back">−5s</button><button class="button" id="cet6AudioPlayButton" type="button" data-cet6-audio="toggle">播放</button><button type="button" data-cet6-audio="skip-forward">+5s</button><span id="cet6AudioTime">00:00 / 00:00</span></div><div class="training-primary-actions"><button class="button primary" id="cet6StartPauseButton" type="button">开始</button><button class="button danger" id="cet6EndButton" type="button">结束</button></div><button class="button block" id="cet6NextModuleButton" type="button" hidden>进入下一模块</button></aside></div></div></dialog>
+
+  <dialog id="cet6EndDialog"><form method="dialog"><div class="dialog-heading"><div><span class="section-kicker">提前结束需确认</span><h2>结束本次训练？</h2></div></div><p>当前计时和音频将停止。保存后需要填写做题记录。</p><div class="dialog-actions stacked-actions"><button class="button" id="continueCet6TrainingButton" type="button">继续训练</button><button class="button" id="discardCet6TrainingButton" type="button">结束且不保存</button><button class="button primary" id="finishCet6TrainingButton" type="button">结束并保存</button></div></form></dialog>
+
+  <dialog id="cet6TimeoutDialog"><form method="dialog"><div class="dialog-heading"><div><span class="section-kicker">设定时间已结束</span><h2 id="cet6TimeoutTitle">本模块到时</h2></div></div><p>超时时长会单独记录。你可以延长当前模块或进入下一模块。</p><div class="timeout-options"><button class="button" type="button" data-cet6-extend="300">延长5分钟</button><button class="button" type="button" data-cet6-extend="600">延长10分钟</button><label>自定义分钟<input id="cet6CustomExtension" type="number" min="1" max="120" value="5"></label></div><div class="dialog-actions"><button class="button" id="customExtendCet6Button" type="button">确认自定义延长</button><button class="button primary" id="timeoutNextCet6Button" type="button">进入下一模块</button></div></form></dialog>
+
+  <dialog id="cet6RecordDialog" class="wide-dialog"><form method="dialog" id="cet6TrainingRecordForm"><div class="dialog-heading"><div><span class="section-kicker">训练结束后保存</span><h2>填写做题记录</h2></div><button class="icon-button" id="deferCet6RecordButton" type="button" aria-label="稍后补充">×</button></div><div class="form-grid"><label>完成日期 *<input id="cet6RecordDate" type="date" required></label><label>训练模块 *<input id="cet6RecordModules" required readonly></label><label>做题材料<input id="cet6RecordMaterial" maxlength="120" placeholder="可填写纸质版或其他平台材料"></label><label>实际用时（分钟）<input id="cet6RecordDuration" type="number" min="0" max="600"></label><label>正确题数<input id="cet6RecordCorrect" type="number" min="0" max="100"></label><label>总题数<input id="cet6RecordTotal" type="number" min="1" max="100"></label><label>首个复盘日期<input id="cet6RecordReviewDate" type="date"></label><label>成果附件<input id="cet6RecordAttachment" type="file" accept="image/*,.pdf,.doc,.docx"></label></div><label>做题情况与问题<textarea id="cet6RecordNotes" rows="4" maxlength="2000" placeholder="可稍后补充"></textarea></label><fieldset><legend>错因标签（可多选）</legend><div class="tag-checks"><label><input type="checkbox" name="cet6ErrorTag" value="听力定位">听力定位</label><label><input type="checkbox" name="cet6ErrorTag" value="词汇">词汇</label><label><input type="checkbox" name="cet6ErrorTag" value="长难句">长难句</label><label><input type="checkbox" name="cet6ErrorTag" value="时间分配">时间分配</label><label><input type="checkbox" name="cet6ErrorTag" value="拼写语法">拼写语法</label></div></fieldset><p id="cet6RecordError" class="form-error" aria-live="polite"></p><div class="dialog-actions"><button class="button" id="saveCet6RecordDraftButton" type="button">保存为待补记录</button><button class="button primary" type="submit">保存记录</button></div></form></dialog>
+
+  <dialog id="ieltsTopicDialog"><form method="dialog" id="ieltsTopicForm"><div class="dialog-heading"><div><span class="section-kicker">本地口语题库</span><h2>新增话题</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><label>Part / 类型<select id="ieltsTopicPart"><option>Part 1</option><option>Part 2</option><option>Part 3</option><option>自定义</option></select></label><label>话题名称 *<input id="ieltsTopicName" required maxlength="120"></label><label>来源或标签<input id="ieltsTopicTags" maxlength="160"></label><label>批量录入题目<textarea id="ieltsTopicQuestions" rows="8" placeholder="每行一道题"></textarea></label><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">保存话题</button></div></form></dialog>
+  <dialog id="ieltsQuestionDialog"><form method="dialog" id="ieltsQuestionForm"><div class="dialog-heading"><div><span class="section-kicker">同一话题可持续增加</span><h2>增加口语题目</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><label>题目 *<textarea id="ieltsQuestionText" required rows="5" placeholder="可一次粘贴多行"></textarea></label><label>Part 2 提示点（可选）<textarea id="ieltsQuestionCues" rows="4" placeholder="每行一个提示点"></textarea></label><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">加入题目</button></div></form></dialog>
+  <dialog id="ieltsSpeakingDialog" class="speaking-record-dialog"><div class="dialog-heading"><div><span id="ieltsRecordingPart" class="section-kicker">逐题练习</span><h2 id="ieltsRecordingQuestion">口语题目</h2></div><button class="icon-button" id="closeIeltsSpeakingButton" type="button" aria-label="关闭">×</button></div><div id="ieltsRecordingCountdown" class="recording-countdown" hidden>3</div><div class="recording-stage"><span id="ieltsRecordingStatus" class="status-tag">准备录音</span><time id="ieltsRecordingTimer">00:00</time><div id="ieltsRecordingWave" class="recording-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="training-primary-actions"><button class="button primary" id="startIeltsRecordingButton" type="button">开始录音</button><button class="button" id="pauseIeltsRecordingButton" type="button" disabled>暂停</button><button class="button danger" id="stopIeltsRecordingButton" type="button" disabled>结束</button></div></div><div id="ieltsRecordingResult" class="recording-result" hidden><div class="audio-review-row"><button type="button" data-ielts-recording-audio="skip-back">−5s</button><button class="button" id="playIeltsRecordingButton" type="button" data-ielts-recording-audio="toggle">播放</button><button type="button" data-ielts-recording-audio="skip-forward">+5s</button><select id="ieltsRecordingRate"><option value="0.75">0.75×</option><option value="1" selected>1.0×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select></div><label>备注<textarea id="ieltsRecordingNote" rows="3"></textarea></label><div class="speaking-self-ratings" id="ieltsSpeakingRatings"></div><div class="dialog-actions"><button class="button" id="favoriteIeltsRecordingButton" type="button">设为最佳录音</button><button class="button primary" id="saveIeltsRecordingButton" type="button">保存本次训练</button></div></div></dialog>
+  <dialog id="ieltsMicrophoneDialog"><form method="dialog"><div class="dialog-heading"><div><span class="section-kicker">本地麦克风</span><h2>录音设备与10秒测试</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><label>输入设备<select id="ieltsMicrophoneSelect"><option value="">跟随 macOS 默认输入</option></select></label><label class="inline-checkbox"><input id="ieltsCountdownSetting" type="checkbox" checked>每次录音前显示3秒倒数</label><p id="ieltsMicrophoneStatus" class="muted-note">测试录音不会加入题库。</p><div class="dialog-actions"><button class="button" id="startIeltsMicTestButton" type="button">开始10秒测试</button><button class="button primary" type="button" data-dialog-close>完成</button></div></form></dialog>
+  <dialog id="ieltsWrittenSetupDialog" class="wide-dialog"><form method="dialog" id="ieltsWrittenSetupForm"><div class="dialog-heading"><div><span class="section-kicker">笔试与口语分开</span><h2 id="ieltsWrittenSetupTitle">IELTS 笔试训练</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><input id="ieltsWrittenKind" type="hidden"><div class="cet6-setup-grid"><label>训练日期<input id="ieltsWrittenDate" type="date" required></label><label>考试类型<select id="ieltsWrittenExamType"><option>Academic</option><option>General Training</option></select></label><label>考试介质<select id="ieltsWrittenDelivery"><option value="computer">机考模拟</option><option value="paper">纸笔模拟</option><option value="free">自由训练</option></select></label><label>关联材料<select id="ieltsWrittenMaterial"><option value="">不关联资料 / 纸质版 / 其他平台</option></select></label><label>计时模式<select id="ieltsWrittenTimerMode"><option value="modules">分模块计时</option><option value="countdown">总倒计时</option></select></label><label>音频方式<select id="ieltsWrittenAudioMode"><option value="none">本次不播放</option><option value="workspace">使用工作台播放</option><option value="external">使用其他设备播放</option></select></label></div><fieldset class="cet6-module-fieldset"><legend>笔试模块与顺序</legend><div id="ieltsWrittenModuleOrder" class="cet6-module-order"></div></fieldset><div id="ieltsWrittenModuleTimes" class="cet6-module-times"></div><p id="ieltsWrittenSetupError" class="form-error"></p><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">进入准备页</button></div></form></dialog>
+  <dialog id="ieltsWrittenTrainingDialog" class="training-dialog"><div class="training-dialog-shell"><header><div><span id="ieltsWrittenTrainingMode" class="section-kicker">笔试训练</span><h2 id="ieltsWrittenTrainingTitle">IELTS</h2></div></header><div class="training-workspace"><section class="training-document"><div id="ieltsWrittenFiles" class="training-file-actions"></div><p class="muted-note">未关联电子资料时可使用纸质试卷或其他平台。</p></section><aside class="training-controls"><span id="ieltsWrittenTrainingStatus" class="status-tag">准备开始</span><time id="ieltsWrittenTimerDisplay">02:40:00</time><strong id="ieltsWrittenCurrentModule">听力</strong><div id="ieltsWrittenModuleProgress" class="module-progress"></div><div class="training-primary-actions"><button class="button primary" id="ieltsWrittenStartPauseButton" type="button">开始</button><button class="button danger" id="ieltsWrittenEndButton" type="button">结束</button></div><button class="button block" id="ieltsWrittenNextButton" type="button">进入下一模块</button></aside></div></div></dialog>
+  <dialog id="ieltsWrittenRecordDialog"><form method="dialog" id="ieltsWrittenRecordForm"><div class="dialog-heading"><div><span class="section-kicker">IELTS 独立记录</span><h2>保存笔试训练</h2></div></div><div class="form-grid"><label>完成日期 *<input id="ieltsWrittenRecordDate" type="date" required></label><label>训练模块 *<input id="ieltsWrittenRecordModules" required></label><label>资料<input id="ieltsWrittenRecordMaterial"></label><label>实际用时（分钟）<input id="ieltsWrittenRecordDuration" type="number" min="0"></label><label>正确题数<input id="ieltsWrittenRecordCorrect" type="number" min="0" max="40"></label><label>总题数<input id="ieltsWrittenRecordTotal" type="number" min="1" max="40"></label><label>首个复盘日期<input id="ieltsWrittenRecordReview" type="date"></label></div><label>备注<textarea id="ieltsWrittenRecordNotes" rows="4"></textarea></label><p id="ieltsWrittenRecordError" class="form-error"></p><div class="dialog-actions"><button class="button" id="saveIeltsWrittenDraftButton" type="button">保存待补记录</button><button class="button primary" type="submit">保存记录</button></div></form></dialog>
+  <dialog id="ieltsImportDialog" class="wide-dialog"><form method="dialog" id="ieltsImportForm"><div class="dialog-heading"><div><span class="section-kicker">文件名识别后需人工确认</span><h2>IELTS 资料配对</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><div id="ieltsImportGroups" class="cet6-import-groups"></div><div class="import-storage-choice"><label><input type="radio" name="ieltsStorageMode" value="copy" checked>复制到 IELTS 资料库</label><label><input type="radio" name="ieltsStorageMode" value="reference">仅引用原文件</label></div><p id="ieltsImportError" class="form-error"></p><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">确认导入</button></div></form></dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="researchProjectDialog" class="wide-dialog"><form id="researchProjectForm" method="dialog"><div class="dialog-heading"><div><span class="section-kicker">项目基本信息</span><h2 id="researchProjectDialogTitle">新增项目</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><input id="researchEditingProjectId" type="hidden"><div class="form-grid"><label>项目名称 *<input id="researchProjectName" required maxlength="120"></label><label>项目类型 *<select id="researchProjectKind" required><option>小论文</option><option>毕业论文</option><option>导师项目</option><option>课程论文</option><option>自定义</option></select></label><label>开始日期 *<input id="researchProjectStart" type="date" required></label><label>目标完成日期 *<input id="researchProjectEnd" type="date" required></label><label>状态<select id="researchProjectStatus"><option>未开始</option><option>进行中</option><option>暂停</option><option>已完成</option></select></label><label>创建方式<select id="researchProjectTemplate"><option value="standard">八阶段模板</option><option value="blank">空白项目</option><option value="copy">复制当前项目结构</option></select></label><label>负责人或导师<input id="researchProjectSupervisor"></label><label>项目颜色<input id="researchProjectColor" type="color" value="#64748b"></label></div><label>研究方向<input id="researchProjectDirection"></label><label>项目说明<textarea id="researchProjectDescription" rows="4"></textarea></label><p id="researchProjectError" class="form-error" aria-live="polite"></p><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">保存项目</button></div></form></dialog>
+
+  <dialog id="researchProjectActionsDialog"><div class="dialog-heading"><div><span class="section-kicker">当前项目</span><h2>项目操作</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><div class="stacked-actions"><button class="button" id="duplicateResearchProjectButton" type="button">复制项目结构</button><button class="button" id="archiveResearchProjectButton" type="button">归档项目</button></div></dialog>
+
+  <dialog id="researchArchiveDialog" class="wide-dialog"><div class="dialog-heading"><div><span class="section-kicker">可搜索和恢复</span><h2>归档项目</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><div id="researchArchiveList" class="research-record-list"></div><div class="dialog-actions"><button class="button" type="button" data-dialog-close>关闭</button></div></dialog>
+
+  <dialog id="researchMilestoneDialog" class="wide-dialog"><form id="researchMilestoneForm" method="dialog"><div class="dialog-heading"><div><span class="section-kicker">阶段计划</span><h2>新增里程碑</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><div class="form-grid"><label>里程碑名称 *<input id="researchMilestoneName" required></label><label>所属阶段 *<select id="researchMilestoneStage" required></select></label><label>计划开始日期<input id="researchMilestoneStart" type="date"></label><label>计划结束日期<input id="researchMilestoneEnd" type="date"></label><label>里程碑权重<input id="researchMilestoneWeight" type="number" min="0.1" step="0.1" value="1"></label><label>前置里程碑<select id="researchMilestoneDependency"><option value="">无</option></select></label></div><label>完成标准 *<textarea id="researchMilestoneStandard" rows="3" required></textarea></label><label class="inline-checkbox"><input id="researchMilestoneRequired" type="checkbox" checked>必需里程碑</label><p id="researchMilestoneError" class="form-error" aria-live="polite"></p><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">保存里程碑</button></div></form></dialog>
+
+  <dialog id="researchEvidenceDialog"><form id="researchEvidenceForm" method="dialog"><div class="dialog-heading"><div><span class="section-kicker">完成确认</span><h2 id="researchEvidenceTitle">关联成果证据</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><input id="researchEvidenceMilestoneId" type="hidden"><label>证据类型<select id="researchEvidenceType"><option>文件</option><option>网页链接</option><option>文字说明</option><option>导师反馈</option><option>分数或数量</option></select></label><label>证据内容 *<textarea id="researchEvidenceValue" rows="4" required></textarea></label><p id="researchEvidenceError" class="form-error" aria-live="polite"></p><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">确认完成</button></div></form></dialog>
+
+  <dialog id="researchAssetDialog" class="wide-dialog"><form id="researchAssetForm" method="dialog"><div class="dialog-heading"><div><span class="section-kicker">默认引用，可选复制</span><h2>上传项目资料</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><div class="inline-actions"><button class="button" id="chooseResearchFilesButton" type="button">选择文件</button><button class="button" id="chooseResearchFolderButton" type="button">选择文件夹</button></div><div id="researchPendingFiles" class="research-import-list"><div class="empty-state compact-empty"><strong>尚未选择文件</strong><span>支持PDF、Word、表格、图片、PPT、文本、BibTeX、RIS和ZIP。</span></div></div><div class="form-grid"><label>资料分类<select id="researchAssetCategory"><option>研究问题</option><option>文献</option><option>理论框架</option><option>数据</option><option>方法模型</option><option>图表结果</option><option>写作章节</option><option>导师意见</option><option>投稿要求</option><option>其他</option></select></label><label>保存方式<select id="researchAssetMode"><option value="reference">引用原文件（推荐）</option><option value="copy">复制到项目资料库</option></select></label></div><p id="researchAssetStatus" class="form-error" aria-live="polite"></p><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">确认导入</button></div></form></dialog>
+
+  <dialog id="researchTextAssetDialog"><form id="researchTextAssetForm" method="dialog"><div class="dialog-heading"><div><span class="section-kicker">网页链接或文字笔记</span><h2>新增项目资料</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><label>资料类型<select id="researchTextAssetType"><option>网页链接</option><option>文字笔记</option></select></label><label>标题 *<input id="researchTextAssetTitle" required></label><label>链接或正文 *<textarea id="researchTextAssetValue" rows="5" required></textarea></label><label>资料分类<select id="researchTextAssetCategory"><option>研究问题</option><option>文献</option><option>理论框架</option><option>数据</option><option>方法模型</option><option>图表结果</option><option>写作章节</option><option>导师意见</option><option>投稿要求</option><option>其他</option></select></label><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">保存资料</button></div></form></dialog>
+
+  <dialog id="researchRecordDialog" class="wide-dialog"><form id="researchRecordForm" method="dialog"><div class="dialog-heading"><div><span class="section-kicker" id="researchRecordKicker">项目记录</span><h2 id="researchRecordTitle">新增记录</h2></div><button class="icon-button" type="button" data-dialog-close aria-label="关闭">×</button></div><input id="researchRecordKind" type="hidden"><div class="form-grid"><label>标题 *<input id="researchRecordName" required></label><label id="researchRecordStatusField">状态<select id="researchRecordStatus"><option>待处理</option><option>处理中</option><option>待导师确认</option><option>已处理</option><option>不采纳</option></select></label><label id="researchRecordDateField">预计解决日期<input id="researchRecordDate" type="date"></label><label id="researchRecordOwnerField">负责人<input id="researchRecordOwner"></label><label id="researchRecordVersionField" hidden>版本号<input id="researchRecordVersion" placeholder="v1.0"></label><label id="researchRecordAssetField" hidden>关联资料<select id="researchRecordAsset"><option value="">不关联文件</option></select></label></div><label>内容或说明 *<textarea id="researchRecordDetails" rows="6" required></textarea></label><div class="dialog-actions"><button class="button" type="button" data-dialog-close>取消</button><button class="button primary" type="submit">保存记录</button></div></form></dialog>
+
+  <script src="word-learning-core.js?v=20260803"></script>
+  <script src="research-core.js?v=20260814"></script>
+  <script src="report-core.js?v=20260803"></script>
+  <script src="cet6-training-core.js?v=20260804"></script>
+  <script src="library-core.js?v=20260814"></script>
+  <script src="health-core.js?v=20260815"></script>
+  <script src="settings-core.js?v=20260815"></script>
+  <script src="review-core.js?v=20260815"></script>
+  <script src="journal-whitelist.js?v=20260815"></script>
+  <script src="app.js?v=20260815-journal-whitelist-v1"></script>
+  <script src="research-module.js?v=20260814"></script>
+  <script src="ielts-module.js?v=20260804"></script>
+</body>
+</html>

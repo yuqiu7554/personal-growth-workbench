@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>今日复盘提交后页面设计</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f4f1;
+      --surface: #fff;
+      --surface-2: #f7f7f4;
+      --text: #171715;
+      --muted: #70716b;
+      --border: #deded8;
+      --strong-border: #c7c8c1;
+      --sidebar: #ecece8;
+      --accent: #315c50;
+      --accent-soft: #e2ece8;
+      --radius: 7px;
+      --sidebar-width: 236px;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 14px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--bg); color: var(--text); letter-spacing: 0; }
+    button, select { font: inherit; letter-spacing: 0; color: inherit; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 0; font-size: 27px; line-height: 1.25; font-weight: 650; }
+    h2 { margin-bottom: 0; font-size: 17px; line-height: 1.35; font-weight: 650; }
+    h3 { margin-bottom: 0; font-size: 14px; line-height: 1.4; }
+    .app-shell { min-height: 100vh; display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
+    .sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; padding: 14px 12px; border-right: 1px solid var(--border); background: var(--sidebar); }
+    .brand { height: 50px; display: flex; align-items: center; gap: 10px; padding: 0 5px 12px; border-bottom: 1px solid var(--border); }
+    .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 6px; background: var(--text); color: var(--surface); font-weight: 750; }
+    .brand div { display: grid; gap: 2px; }
+    .brand span { color: var(--muted); font-size: 11px; }
+    .nav-group { margin-top: 16px; }
+    .nav-label { margin: 0 10px 6px; color: var(--muted); font-size: 10px; font-weight: 700; }
+    .nav-item { width: 100%; min-height: 38px; display: grid; grid-template-columns: 22px 1fr; align-items: center; gap: 8px; margin: 2px 0; padding: 7px 10px; border: 0; border-radius: 5px; background: transparent; text-align: left; }
+    .nav-item.active { background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); }
+    .nav-item span:first-child { color: var(--muted); text-align: center; }
+    .sidebar-footer { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); }
+    .main { min-width: 0; }
+    .topbar { position: sticky; z-index: 10; top: 0; height: 62px; display: flex; align-items: center; gap: 16px; padding: 0 26px; border-bottom: 1px solid var(--border); background: rgba(244, 244, 241, .94); backdrop-filter: blur(12px); }
+    .topbar-date { color: var(--muted); font-size: 12px; }
+    .topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .search { min-width: 210px; min-height: 35px; display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--muted); text-align: left; }
+    .search kbd { margin-left: auto; padding: 1px 5px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface-2); }
+    .icon-button { width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+    .content { width: min(1360px, 100%); margin: 0 auto; padding: 28px 30px 96px; }
+    .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 18px; }
+    .eyebrow, .kicker { margin-bottom: 5px; color: var(--muted); font-size: 10px; font-weight: 700; }
+    .page-heading-actions, .inline-actions { display: flex; align-items: center; gap: 8px; }
+    .button { min-height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+    .button.primary { border-color: var(--text); background: var(--text); color: var(--surface); }
+    .button.quiet { background: transparent; }
+    .button.small { min-height: 31px; padding: 5px 9px; font-size: 12px; }
+    .status-pill { padding: 7px 10px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--muted); font-size: 12px; }
+    .submitted-banner { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; margin-bottom: 14px; padding: 14px 16px; border: 1px solid var(--border); background: var(--surface); }
+    .submitted-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--text); color: var(--surface); font-weight: 750; }
+    .submitted-banner div { display: grid; gap: 3px; }
+    .submitted-banner span { color: var(--muted); font-size: 11px; }
+    .encouragement { min-height: 66px; display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 18px; padding: 13px 16px; border-left: 3px solid var(--accent); background: var(--accent-soft); }
+    .encouragement p { margin: 4px 0 0; line-height: 1.55; }
+    .month-end { min-height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 18px; padding: 12px 15px; border-left: 3px solid var(--text); background: var(--surface-2); }
+    .month-end p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .achievement-board { margin-bottom: 18px; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+    .achievement-grid { display: grid; grid-template-columns: minmax(250px, .78fr) minmax(0, 1.22fr); gap: 18px; }
+    .completion-visual { display: grid; grid-template-columns: 126px minmax(0, 1fr); align-items: center; gap: 18px; padding-right: 18px; border-right: 1px solid var(--border); }
+    .completion-ring { --value: 270deg; width: 122px; aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; background: radial-gradient(circle, var(--surface) 58%, transparent 60%), conic-gradient(var(--text) var(--value), var(--surface-2) 0); }
+    .completion-ring div { text-align: center; }
+    .completion-ring b, .completion-ring span { display: block; }
+    .completion-ring b { font-size: 25px; }
+    .completion-ring span { margin-top: 2px; color: var(--muted); font-size: 10px; }
+    .completion-copy { display: grid; gap: 10px; }
+    .completion-copy > div { padding-bottom: 9px; border-bottom: 1px solid var(--border); }
+    .completion-copy > div:last-child { padding-bottom: 0; border-bottom: 0; }
+    .completion-copy span, .completion-copy small { display: block; color: var(--muted); font-size: 10px; }
+    .completion-copy b { display: block; margin: 3px 0; font-size: 15px; }
+    .chart-area { display: grid; gap: 13px; }
+    .chart-row { display: grid; grid-template-columns: 84px minmax(0, 1fr) 86px; align-items: center; gap: 10px; }
+    .chart-row > span { color: var(--muted); font-size: 11px; }
+    .bar-track { position: relative; height: 13px; overflow: hidden; border-radius: 3px; background: var(--surface-2); }
+    .bar-track i { display: block; height: 100%; background: var(--text); }
+    .bar-track i.secondary { background: var(--strong-border); }
+    .chart-row b { text-align: right; font-size: 11px; }
+    .chart-legend { display: flex; justify-content: flex-end; gap: 14px; color: var(--muted); font-size: 10px; }
+    .chart-legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .chart-legend i { width: 12px; height: 7px; background: var(--text); }
+    .chart-legend i.secondary { background: var(--strong-border); }
+    .key-results { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .key-result { min-width: 0; padding: 12px; border-left: 2px solid var(--text); background: var(--surface-2); }
+    .key-result.pending { border-left-color: var(--strong-border); }
+    .key-result span, .key-result small { display: block; color: var(--muted); font-size: 10px; }
+    .key-result strong { display: block; margin: 5px 0 8px; overflow-wrap: anywhere; line-height: 1.4; }
+    .evidence-gallery { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(220px, .75fr) minmax(220px, .75fr); gap: 10px; margin-top: 16px; }
+    .evidence-card { min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+    .evidence-preview { min-height: 138px; padding: 14px; background: var(--surface-2); }
+    .diagram-preview { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 28px 44px; align-content: center; }
+    .diagram-preview::before, .diagram-preview::after { content: ""; position: absolute; top: 50%; left: 28%; right: 28%; height: 1px; background: var(--strong-border); }
+    .diagram-preview::after { top: 28%; bottom: 28%; left: 50%; width: 1px; height: auto; }
+    .diagram-node { position: relative; z-index: 1; padding: 8px; border: 1px solid var(--strong-border); border-radius: 4px; background: var(--surface); font-size: 10px; text-align: center; }
+    .score-preview { display: grid; align-content: center; gap: 10px; }
+    .score-preview b { font-size: 30px; }
+    .answer-dots { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+    .answer-dots i { aspect-ratio: 1; border-radius: 2px; background: var(--text); }
+    .answer-dots i.wrong { background: var(--strong-border); }
+    .word-preview { display: grid; align-content: center; gap: 12px; }
+    .word-preview b { font-size: 24px; }
+    .mini-bar { height: 7px; overflow: hidden; border-radius: 3px; background: var(--border); }
+    .mini-bar i { display: block; width: 83%; height: 100%; background: var(--text); }
+    .evidence-meta { padding: 11px 12px; }
+    .evidence-meta strong, .evidence-meta span { display: block; }
+    .evidence-meta span { margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .result-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(340px, .9fr); gap: 18px; align-items: start; }
+    .panel { min-width: 0; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+    .panel-heading { min-height: 38px; display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+    .panel-heading p { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+    .answer-block { padding: 15px 0; border-bottom: 1px solid var(--border); }
+    .answer-block:first-of-type { padding-top: 2px; }
+    .answer-block:last-child { border-bottom: 0; }
+    .answer-block span { display: block; margin-bottom: 7px; color: var(--muted); font-size: 11px; }
+    .answer-block p { margin-bottom: 0; line-height: 1.65; }
+    .scale-summary { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 16px; border: 1px solid var(--border); background: var(--surface-2); }
+    .scale-summary div { padding: 12px 6px; border-right: 1px solid var(--border); text-align: center; }
+    .scale-summary div:last-child { border-right: 0; }
+    .scale-summary span, .scale-summary b { display: block; }
+    .scale-summary span { color: var(--muted); font-size: 10px; }
+    .scale-summary b { margin-top: 5px; font-size: 18px; }
+    .collapsed-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 16px; padding: 12px 0 0; border-top: 1px solid var(--border); }
+    .collapsed-row span { color: var(--muted); font-size: 11px; }
+    .side-panel { display: grid; gap: 0; }
+    .side-section + .side-section { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); }
+    .side-section h3 { margin-bottom: 10px; }
+    .ai-summary { padding: 14px; border-left: 2px solid var(--text); background: var(--surface-2); }
+    .ai-summary p { margin: 7px 0 0; color: var(--muted); line-height: 1.55; font-size: 12px; }
+    .evidence-row, .proposal-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+    .evidence-row:last-child, .proposal-row:last-child { border-bottom: 0; }
+    .evidence-row input, .proposal-row input { width: 17px; height: 17px; margin: 2px 0 0; accent-color: var(--text); }
+    .evidence-row > div, .proposal-row > div { min-width: 0; display: grid; gap: 3px; }
+    .evidence-row span, .proposal-row span { color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .evidence-row b, .proposal-row b { font-size: 12px; }
+    .proposal-row select { min-height: 31px; max-width: 105px; padding: 4px 7px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); font-size: 11px; }
+    .basis { margin-top: 6px; padding: 7px 9px; background: var(--surface-2); color: var(--muted); font-size: 10px; line-height: 1.45; }
+    .confirm-write { width: 100%; margin-top: 14px; }
+    .write-summary { display: flex; justify-content: space-between; gap: 12px; margin-top: 10px; color: var(--muted); font-size: 11px; }
+    .result-footer { position: sticky; z-index: 8; bottom: 0; display: flex; align-items: center; gap: 9px; margin-top: 18px; padding: 12px 14px; border: 1px solid var(--strong-border); border-radius: 7px; background: rgba(255, 255, 255, .96); box-shadow: 0 -8px 28px rgba(23, 23, 21, .06); backdrop-filter: blur(12px); }
+    .result-footer span { margin-right: auto; color: var(--muted); font-size: 11px; }
+    @media (max-width: 1080px) {
+      :root { --sidebar-width: 68px; }
+      .brand div, .nav-label, .nav-item span:last-child { display: none; }
+      .brand { justify-content: center; padding-inline: 0; }
+      .nav-item { grid-template-columns: 1fr; }
+      .result-layout { grid-template-columns: 1fr; }
+      .achievement-grid { grid-template-columns: 1fr; }
+      .completion-visual { padding-right: 0; padding-bottom: 16px; border-right: 0; border-bottom: 1px solid var(--border); }
+      .evidence-gallery { grid-template-columns: 1fr 1fr; }
+      .evidence-gallery .evidence-card:first-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 720px) {
+      .app-shell { display: block; }
+      .sidebar { display: none; }
+      .topbar { padding: 0 16px; }
+      .search { min-width: 36px; width: 36px; padding: 0; justify-content: center; }
+      .search span, .search kbd { display: none; }
+      .content { padding: 22px 14px 94px; }
+      .page-heading, .month-end, .encouragement { align-items: flex-start; flex-direction: column; }
+      .submitted-banner { grid-template-columns: auto 1fr; }
+      .submitted-banner > .status-pill { grid-column: 1 / -1; }
+      .scale-summary { grid-template-columns: repeat(5, minmax(52px, 1fr)); overflow-x: auto; }
+      .completion-visual { grid-template-columns: 104px 1fr; }
+      .completion-ring { width: 100px; }
+      .chart-row { grid-template-columns: 68px minmax(0, 1fr) 72px; }
+      .key-results, .evidence-gallery { grid-template-columns: 1fr; }
+      .evidence-gallery .evidence-card:first-child { grid-column: auto; }
+      .result-footer { flex-wrap: wrap; }
+      .result-footer span { width: 100%; margin-right: 0; }
+      .result-footer .button { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">工</span><div><strong>个人成长工作台</strong><span>本地数据 · 今日视图</span></div></div>
+      <nav>
+        <div class="nav-group"><p class="nav-label">总览与计划</p><button class="nav-item"><span>⌂</span><span>工作台总览</span></button><button class="nav-item"><span>✓</span><span>今日待办</span></button><button class="nav-item"><span>□</span><span>日历</span></button></div>
+        <div class="nav-group"><p class="nav-label">学习与科研</p><button class="nav-item"><span>A</span><span>英语学习</span></button><button class="nav-item"><span>文</span><span>论文项目</span></button></div>
+        <div class="nav-group"><p class="nav-label">健康</p><button class="nav-item"><span>＋</span><span>运动健康</span></button></div>
+        <div class="nav-group"><p class="nav-label">复盘</p><button class="nav-item active"><span>◷</span><span>今日复盘</span></button><button class="nav-item"><span>≡</span><span>周月总结</span></button></div>
+      </nav>
+      <div class="sidebar-footer"><button class="nav-item"><span>⚙</span><span>设置</span></button></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><span class="topbar-date">2026年8月31日 · 星期一</span><div class="topbar-actions"><button class="search"><span>全局搜索</span><kbd>⌘K</kbd></button><button class="icon-button" aria-label="通知">○</button><button class="icon-button" aria-label="快速新增">＋</button></div></header>
+      <div class="content">
+        <div class="page-heading">
+          <div><p class="eyebrow">今日复盘 · 已提交</p><h1>回看今天，为明天留下清晰的一步</h1></div>
+          <div class="page-heading-actions"><button class="button">查看历史</button><button class="button">修改复盘</button></div>
+        </div>
+
+        <section class="submitted-banner"><span class="submitted-mark">✓</span><div><strong>今日复盘已保存</strong><span>2026年8月31日 22:24 · 版本2 · 本地SQLite · 按时提交</span></div><span class="status-pill">AI分析完成</span></section>
+        <section class="encouragement"><div><strong>今天最重要的推进已经发生</strong><p>你完成了小论文变量关系图，并把它整理成了可供导师讨论的成果文件。明天只需继续补齐理论依据，不必重新开始。</p></div><span class="status-pill">依据今日成果</span></section>
+        <section class="month-end"><div><strong>8月总结与9月计划</strong><p>本月数据已就绪，月总结会单独确认，不会自动改动目标与任务。</p></div><button class="button">进入月总结</button></section>
+
+        <section class="achievement-board">
+          <div class="panel-heading"><div><p class="kicker">今日成果总览</p><h2>完成的事情，已经形成清晰证据</h2><p>所有图表均来自今日任务、计时、学习和成果记录</p></div><span class="status-pill">8月31日</span></div>
+          <div class="achievement-grid">
+            <div class="completion-visual">
+              <div class="completion-ring"><div><b>75%</b><span>任务完成</span></div></div>
+              <div class="completion-copy">
+                <div><span>今日任务</span><b>完成 6 / 8</b><small>延期1项 · 取消0项</small></div>
+                <div><span>三项关键任务</span><b>完成 2 / 3</b><small>1项进入明日行动</small></div>
+                <div><span>成果证据</span><b>新增 3 项</b><small>文件1 · 训练2</small></div>
+              </div>
+            </div>
+            <div class="chart-area">
+              <div class="chart-legend"><span><i></i>实际投入</span><span><i class="secondary"></i>计划时长</span></div>
+              <div class="chart-row"><span>科研论文</span><div class="bar-track"><i style="width:88%"></i></div><b>2h 28m</b></div>
+              <div class="chart-row"><span>英语学习</span><div class="bar-track"><i style="width:38%"></i></div><b>1h 04m</b></div>
+              <div class="chart-row"><span>计划整理</span><div class="bar-track"><i style="width:27%"></i></div><b>45m</b></div>
+              <div class="chart-row"><span>运动健康</span><div class="bar-track"><i style="width:15%"></i></div><b>25m</b></div>
+              <div class="chart-row"><span>今日计划</span><div class="bar-track"><i class="secondary" style="width:100%"></i></div><b>5h 10m</b></div>
+            </div>
+          </div>
+          <div class="key-results">
+            <article class="key-result"><span>关键任务 01 · 已完成</span><strong>完成小论文变量关系图</strong><small>形成可供导师讨论的第一版成果</small></article>
+            <article class="key-result"><span>关键任务 02 · 已完成</span><strong>完成CET-6阅读训练</strong><small>正确7/10 · 用时42分钟</small></article>
+            <article class="key-result pending"><span>关键任务 03 · 进行中</span><strong>补充假设理论依据</strong><small>已完成资料定位 · 明日继续</small></article>
+          </div>
+          <div class="evidence-gallery">
+            <article class="evidence-card"><div class="evidence-preview diagram-preview"><span class="diagram-node">高原产地</span><span class="diagram-node">无人机短驳</span><span class="diagram-node">冷链接驳</span><span class="diagram-node">干支线运输</span></div><div class="evidence-meta"><strong>变量关系图_v1.pdf</strong><span>小论文成果 · 18:42更新 · 可直接预览</span></div></article>
+            <article class="evidence-card"><div class="evidence-preview score-preview"><span>CET-6 仔细阅读</span><b>7 / 10</b><div class="answer-dots"><i></i><i></i><i></i><i class="wrong"></i><i></i><i></i><i class="wrong"></i><i></i><i class="wrong"></i><i></i></div></div><div class="evidence-meta"><strong>阅读训练记录</strong><span>42分钟 · 复盘日期9月2日</span></div></article>
+            <article class="evidence-card"><div class="evidence-preview word-preview"><span>今日词汇复习</span><b>48 词</b><div class="mini-bar"><i></i></div><span>正确率 83%</span></div><div class="evidence-meta"><strong>遗忘曲线复习</strong><span>错误5词 · 不会3词</span></div></article>
+          </div>
+        </section>
+
+        <div class="result-layout">
+          <section class="panel">
+            <div class="panel-heading"><div><p class="kicker">复盘内容</p><h2>今天的回答</h2><p>当前版本：v2 · 原始内容未被AI覆盖</p></div><button class="button small">版本记录</button></div>
+            <div class="answer-block"><span>今天完成了什么？</span><p>完成小论文变量关系图，整理了组会汇报框架；完成CET-6阅读训练并复习今日到期词汇。</p></div>
+            <div class="answer-block"><span>今天最大的阻碍是什么？</span><p>下午连续切换任务，导致论文阅读被打断，文献证据定位比预计多用了35分钟。</p></div>
+            <div class="answer-block"><span>明天最重要的一件事是什么？</span><p>在上午完成假设依据补充，并把变量关系图整理为导师可阅读版本。</p></div>
+            <div class="scale-summary">
+              <div><span>精力</span><b>3</b></div><div><span>压力</span><b>4</b></div><div><span>满意度</span><b>4</b></div><div><span>专注度</span><b>3</b></div><div><span>身体状态</span><b>3</b></div>
+            </div>
+            <div class="collapsed-row"><div><strong>进一步复盘与自由记录</strong><br><span>5项回答 · 1段自由记录</span></div><button class="button small">展开查看</button></div>
+          </section>
+
+          <aside class="panel side-panel">
+            <section class="side-section">
+              <div class="panel-heading"><div><p class="kicker">AI今日总结</p><h2>事实、偏差与建议</h2></div><span class="status-pill">DeepSeek</span></div>
+              <div class="ai-summary"><strong>今日判断</strong><p>科研主任务形成了可检查成果，但下午的任务切换造成35分钟估时偏差。英语训练按计划完成，整体负荷没有明显过量证据。</p></div>
+            </section>
+
+            <section class="side-section">
+              <h3>未完成任务处理</h3>
+              <div class="proposal-row"><input type="checkbox" checked><div><strong>补充假设理论依据</strong><span>高优先级 · 原预计60分钟</span><div class="basis">依据：今日同类任务比预计多用35分钟，建议重新估时为90分钟。</div></div><select><option>重新估时</option></select></div>
+              <div class="proposal-row"><input type="checkbox"><div><strong>整理导师意见回应</strong><span>明日截止 · 等待资料</span><div class="basis">依据：当前记录显示等待资料，未发现取消任务的充分证据。</div></div><select><option>延期</option></select></div>
+            </section>
+
+            <section class="side-section">
+              <h3>明日行动草案</h3>
+              <div class="proposal-row"><input type="checkbox" checked><div><strong>完成假设依据补充</strong><span>建议90分钟 · 关联小论文</span><div class="basis">依据：来自“明天最重要的一件事”和今日估时偏差。</div></div><span class="status-pill">待写入</span></div>
+              <div class="proposal-row"><input type="checkbox" checked><div><strong>上午保留完整科研时间块</strong><span>计划调整 · 仅影响明日</span><div class="basis">依据：下午频繁切换任务被记录为今日最大阻碍。</div></div><span class="status-pill">待写入</span></div>
+            </section>
+
+            <button class="button primary confirm-write">确认写入所选项目</button>
+            <div class="write-summary"><span>已选择3项</span><span>写入前将再次预览</span></div>
+          </aside>
+        </div>
+
+        <footer class="result-footer"><span>复盘版本和AI结果均仅保存在本地</span><button class="button">导出</button><button class="button">查看历史</button><button class="button">修改复盘</button><button class="button primary">返回工作台</button></footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

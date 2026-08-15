@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
+const root = new URL('..', import.meta.url);
+const required = ['LICENSE','README.md','CHANGELOG.md','THIRD_PARTY_NOTICES.md','CONTRIBUTING.md','CODE_OF_CONDUCT.md','SECURITY.md','PRIVACY.md','docs/RELEASE_READINESS.md','native-shell/PrivacyInfo.xcprivacy'];
+for (const file of required) if (!fs.existsSync(new URL(file, root))) throw new Error(`missing release file: ${file}`);
+execFileSync('/usr/bin/plutil', ['-lint', new URL('native-shell/PrivacyInfo.xcprivacy', root).pathname], { stdio: 'inherit' });
+execFileSync('/usr/bin/plutil', ['-lint', new URL('native-shell/PersonalGrowthWorkbench.entitlements', root).pathname], { stdio: 'inherit' });
+const plist = fs.readFileSync(new URL('native-shell/Info.plist', root), 'utf8');
+if (!plist.includes('<string>com.qiuyu.personalgrowthworkbench</string>') || !plist.includes('<string>0.6.0</string>') || !plist.includes('<string>13</string>')) throw new Error('release identity mismatch');
+const license = fs.readFileSync(new URL('LICENSE', root), 'utf8');
+if (!license.includes('GNU GENERAL PUBLIC LICENSE') || !license.includes('Version 3, 29 June 2007')) throw new Error('GPL-3.0 license text mismatch');
+console.log('PASS: deterministic release files and privacy plists verified.');

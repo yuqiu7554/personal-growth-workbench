@@ -1,0 +1,35 @@
+# Frontend and Rust build output
+node_modules/
+target/
+src-tauri/target/
+
+# Local application data and secrets
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+.env
+.env.*
+!.env.example
+backups/
+attachments/
+logs/
+
+# macOS and editor files
+.DS_Store
+.vscode/
+
+# Generated bundles and signing material
+*.app
+*.dmg
+*.p12
+*.mobileprovision
+
+# Local delivery, temporary artifacts, and private planning records
+desktop-dist/
+work/
+outputs/
+progress.md
+findings.md
+task_plan.md

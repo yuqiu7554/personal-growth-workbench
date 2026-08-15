@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key><string>zh_CN</string>
+  <key>CFBundleExecutable</key><string>GrowthWorkbench</string>
+  <key>CFBundleIdentifier</key><string>com.qiuyu.personalgrowthworkbench</string>
+  <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+  <key>CFBundleName</key><string>个人成长工作台</string>
+  <key>CFBundleDisplayName</key><string>个人成长工作台</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>0.6.0</string>
+  <key>CFBundleVersion</key><string>13</string>
+  <key>LSMinimumSystemVersion</key><string>11.0</string>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>NSPrincipalClass</key><string>NSApplication</string>
+  <key>NSMicrophoneUsageDescription</key><string>用于 IELTS 口语练习录音、回听和本地保存。</string>
+  <key>NSSpeechRecognitionUsageDescription</key><string>仅在用户主动选择时，将 IELTS 口语录音转写为可校对的英文文本。</string>
+</dict>
+</plist>
