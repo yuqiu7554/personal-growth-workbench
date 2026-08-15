@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
 const root = new URL('..', import.meta.url);
-const required = ['LICENSE','README.md','CHANGELOG.md','THIRD_PARTY_NOTICES.md','CONTRIBUTING.md','CODE_OF_CONDUCT.md','SECURITY.md','PRIVACY.md','docs/RELEASE_READINESS.md','native-shell/PrivacyInfo.xcprivacy'];
+const required = ['LICENSE','README.md','CHANGELOG.md','THIRD_PARTY_NOTICES.md','CONTRIBUTING.md','CODE_OF_CONDUCT.md','SECURITY.md','PRIVACY.md','docs/RELEASE_READINESS.md','native-shell/PrivacyInfo.xcprivacy','.github/workflows/ci.yml','.github/workflows/codeql.yml','.github/dependabot.yml','.github/CODEOWNERS','.github/pull_request_template.md','.github/ISSUE_TEMPLATE/bug_report.yml','.github/ISSUE_TEMPLATE/feature_request.yml'];
 for (const file of required) if (!fs.existsSync(new URL(file, root))) throw new Error(`missing release file: ${file}`);
 execFileSync('/usr/bin/plutil', ['-lint', new URL('native-shell/PrivacyInfo.xcprivacy', root).pathname], { stdio: 'inherit' });
 execFileSync('/usr/bin/plutil', ['-lint', new URL('native-shell/PersonalGrowthWorkbench.entitlements', root).pathname], { stdio: 'inherit' });
@@ -9,4 +9,8 @@ const plist = fs.readFileSync(new URL('native-shell/Info.plist', root), 'utf8');
 if (!plist.includes('<string>com.qiuyu.personalgrowthworkbench</string>') || !plist.includes('<string>0.6.0</string>') || !plist.includes('<string>13</string>')) throw new Error('release identity mismatch');
 const license = fs.readFileSync(new URL('LICENSE', root), 'utf8');
 if (!license.includes('GNU GENERAL PUBLIC LICENSE') || !license.includes('Version 3, 29 June 2007')) throw new Error('GPL-3.0 license text mismatch');
+const readme = fs.readFileSync(new URL('README.md', root), 'utf8');
+if (!readme.includes('本阶段只发布源码') || !readme.includes('git clone https://github.com/yuqiu7554/personal-growth-workbench.git')) throw new Error('source-only build guidance missing');
+const cargo = fs.readFileSync(new URL('src-tauri/Cargo.toml', root), 'utf8');
+if (!cargo.includes('license = "GPL-3.0-only"') || !cargo.includes('repository = "https://github.com/yuqiu7554/personal-growth-workbench"')) throw new Error('Cargo open-source metadata mismatch');
 console.log('PASS: deterministic release files and privacy plists verified.');

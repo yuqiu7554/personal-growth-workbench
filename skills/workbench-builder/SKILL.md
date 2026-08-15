@@ -31,6 +31,15 @@ Skip this gate for narrow, unambiguous bug fixes, verification requests, copy ch
 5. Run `scripts/deliver-desktop.sh` from this skill directory after every completed application update.
 6. Keep only `$HOME/Desktop/个人成长工作台.app` as the Desktop entry. Before replacement, retain the current Desktop app as `desktop-dist/backup/个人成长工作台.previous.app`; replace that backup only when the next build begins. Do not report completion unless the project app and Desktop app pass signing, byte-for-byte resource/binary checks, and launch verification. Restore the backup if launch verification fails.
 
+## External Research Handoffs
+
+- Policy/news media source curation and academic journal-list curation are maintained in separate Codex tasks chosen by the user.
+- Do not repeat those research jobs inside a Workbench implementation task. Consume only the explicit handoff file and confirmed rules supplied by the user or source task.
+- Before integration, record the handoff file path, generated date, source/version evidence, inclusion and exclusion rules, and unresolved fields. A candidate list or paused research note is not a production source list.
+- Keep deterministic filtering ahead of AI processing. AI may summarize, translate, relate, or rank accepted records, but may not add an unverified source or override a hard exclusion.
+- Test imported source lists and journal lists independently, then test their Workbench UI, scheduling, history, failure retention, and privacy behavior. Do not edit the upstream handoff artifact in place.
+- If the external task has not delivered a complete, readable artifact, continue unrelated Workbench work and report that integration as pending rather than starting a duplicate search.
+
 ## Desktop Delivery Gate
 
 The Desktop copy is the user-facing product. Updating only HTML, source files, `desktop-dist`, or a browser preview is incomplete.

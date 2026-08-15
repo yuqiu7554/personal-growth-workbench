@@ -2,9 +2,11 @@
 name = "growth-workbench"
 version = "0.1.0"
 description = "A local-first personal growth workbench"
-authors = ["Growth Workbench Contributors"]
+authors = ["邱昱 and contributors"]
 edition = "2021"
 rust-version = "1.77.2"
+license = "GPL-3.0-only"
+repository = "https://github.com/yuqiu7554/personal-growth-workbench"
 
 [lib]
 name = "growth_workbench_lib"

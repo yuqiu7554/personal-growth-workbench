@@ -2,24 +2,22 @@
 
 负责人：邱昱
 项目：个人成长工作台
-目标：macOS 桌面公开 1.0
+目标：先公开源码；根据反馈再决定是否分发 macOS 预编译版本
 
 ## 当前结论
 
-`0.6.0` 已具备本地 SQLite、钥匙串、设置中心、隐私清单、加密备份、正式 Bundle ID 和旧版数据迁移，但还不是可直接公开分发的正式 1.0。公开源码与公开二进制是两道不同门禁。
+`0.6.0` 已具备本地 SQLite、钥匙串、设置中心、隐私清单、加密备份、正式 Bundle ID 和旧版数据迁移。当前决策是只发布源码，不提供未经 Apple 正式签名和公证的二进制。源码公开与预编译应用分发是两道独立门禁。
 
-## 发布前必须完成
+## 源码公开门禁
 
 - 已采用 `GPL-3.0-only` 并添加正式 `LICENSE`；公开前继续核对所有第三方资源兼容性。
-- GitHub 仓库为 `yuqiu7554/personal-growth-workbench`；启用 Issues、Private Vulnerability Reporting 和 `main` 分支保护。
+- GitHub 仓库为 `yuqiu7554/personal-growth-workbench`；Issues、Private Vulnerability Reporting 和 `main` 分支保护已启用。
 - 确认名称、图标、README 截图和演示数据均为原创或具有明确授权。
 - 全仓扫描密钥、个人绝对路径、SQLite、日志、备份、真题、音频和论文全文。
 - 对所有数据库迁移、30天回收站、导出、加密备份与恢复执行往返测试。
-- 用 Apple Developer Program 的 Developer ID Application 证书启用 Hardened Runtime 并最小化 entitlements。
-- 对最终 `.app`/DMG 执行签名、公证、staple、Gatekeeper 和隔离属性测试。
-- 生成并审核 Xcode Privacy Report；核对 `PrivacyInfo.xcprivacy` 与实际 API 使用。
-- 在一台未信任开发证书的 Mac 或干净账户完成安装、首次启动、权限拒绝与离线验收。
-- 建立版本号、变更日志、发布哈希、回滚包和安全响应记录。
+- GitHub Actions 执行确定性模块检查、原生壳编译、SQLite/迁移/备份自检和 CodeQL，不上传构建产物。
+- README 明确源码构建步骤、系统要求、数据边界及 BYOK 原则。
+- 建立版本号、变更日志和安全响应记录。
 
 ## 许可证
 
@@ -34,7 +32,7 @@
 - AI 生成的代码和素材应保留来源/审查记录，并人工确认没有复制性表达或第三方标识。
 - 专利只在确有新颖技术方案且准备承担检索、申请和维护成本时评估；普通界面和业务规则通常不应先假定可获专利。
 
-## 签名与分发顺序
+## 未来预编译版本门禁（当前不执行）
 
 1. 冻结版本和数据迁移。
 2. Release 构建，启用 Hardened Runtime。
@@ -44,10 +42,12 @@
 6. staple 应用/DMG，运行 `codesign`、`spctl` 和 quarantine 测试。
 7. 发布校验和、变更日志、隐私协议和已知问题。
 
+上述流程仅在未来决定提供 `.app` 或 DMG 时启用；公开源码本身不需要 Apple Developer Program 或 Developer ID。
+
 ## 当前明确未决项
 
-- GitHub 仓库尚需完成首次推送、Private Vulnerability Reporting 与分支保护验收；不公开安全邮箱。
-- 本机没有 Apple Developer Team、Developer ID Application 证书和公证凭据，正式二进制发布因此阻塞。
+- 首次源码推送、Private Vulnerability Reporting 与分支保护已经验收；不公开安全邮箱。
+- 本机为免费 `Personal Team`，没有 Developer ID Application。由于当前不发布预编译二进制，这不是源码开源阻塞项。
 - 当前默认图标为项目原创临时正式图标；后续可在不改变数据的情况下替换品牌定稿。
 - App Sandbox：当前外部文件路径尚未全面升级为 security-scoped bookmarks，因此候选 entitlements 暂不用于当前构建。
 - 自动备份密码不持久化；跨重启自动加密备份需要单独设计安全解锁方式，不能退化为明文备份。

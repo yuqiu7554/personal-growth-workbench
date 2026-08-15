@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 私密安全报告
+    url: https://github.com/yuqiu7554/personal-growth-workbench/security/advisories/new
+    about: 密钥泄漏、数据暴露或其他安全问题请勿使用公开 Issue。

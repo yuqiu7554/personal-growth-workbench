@@ -6,6 +6,8 @@
 - Bundle ID 更新为 `com.qiuyu.personalgrowthworkbench`，并加入旧偏好、SQLite、受管文件和钥匙串凭据的保留式迁移。
 - 更新原创黑白灰默认图标，保留设置中的用户自定义图标能力。
 - 将发布身份、数据迁移和许可证纳入确定性发布检查。
+- 发布策略调整为源码优先，不提供未经 Developer ID 签名和 Apple 公证的二进制。
+- 增加源码检查、原生数据自检、CodeQL、Dependabot、Issue/PR 模板和 CODEOWNERS。
 
 ## 0.5.0 - 2026-08-15
 

@@ -1,0 +1,57 @@
+name: Source checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: source-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deterministic-checks:
+    name: Rules and UI bindings
+    runs-on: macos-14
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run deterministic checks
+        run: |
+          set -eu
+          for check in scripts/check-*.mjs; do
+            case "$check" in
+              scripts/check-news-ui.mjs) continue ;;
+            esac
+            node "$check"
+          done
+
+  native-shell:
+    name: Native shell and local-data self-tests
+    runs-on: macos-14
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile AppKit shell
+        run: |
+          set -eu
+          cache="$(mktemp -d)"
+          clang native-shell/main.m -o /tmp/GrowthWorkbench-CI \
+            -fobjc-arc -fmodules-cache-path="$cache" \
+            -framework Cocoa -framework AVFoundation -framework CoreMedia \
+            -framework Quartz -framework PDFKit -framework Speech \
+            -framework Vision -framework Security -framework WebKit \
+            -framework UserNotifications -lsqlite3
+      - name: Verify database migration and backup
+        run: |
+          /tmp/GrowthWorkbench-CI --database-self-test
+          /tmp/GrowthWorkbench-CI --bundle-migration-self-test
+          /tmp/GrowthWorkbench-CI --backup-self-test

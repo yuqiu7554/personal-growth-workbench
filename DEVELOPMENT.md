@@ -31,6 +31,20 @@ cargo fetch
 
 输出位于`desktop-dist/个人成长工作台.app`。它是真正的 macOS 应用包，用于原生窗口和视觉验收，并使用本地临时签名。当前原生壳已通过系统 SQLite 接入核心状态存储，首次运行会把旧 `localStorage` 状态迁入数据库并删除旧缓存。后续 Tauri 正式壳必须保持相同的数据库路径、schema 版本和迁移语义。
 
+运行核心原生自检：
+
+```bash
+desktop-dist/个人成长工作台.app/Contents/MacOS/GrowthWorkbench --database-self-test
+desktop-dist/个人成长工作台.app/Contents/MacOS/GrowthWorkbench --bundle-migration-self-test
+desktop-dist/个人成长工作台.app/Contents/MacOS/GrowthWorkbench --backup-self-test
+```
+
+## Source-only release policy
+
+当前公开渠道只发布 Git 源码，不上传 `.app`、DMG、用户数据库或任何签名凭据。GitHub Actions 负责确定性规则检查、AppKit 原生壳编译、SQLite/迁移/备份自检和 CodeQL；它不创建可下载二进制。
+
+免费 Apple `Personal Team` 足以用于本机开发。只有未来决定向其他用户分发预编译应用时，才需要付费 Apple Developer Program、Developer ID Application、Hardened Runtime 和公证。
+
 默认数据库位于 `~/Library/Application Support/com.qiuyu.personalgrowthworkbench/workbench.sqlite3`。设置页可选择文件夹并通过 SQLite backup API 迁移到 `个人成长工作台.sqlite3`；切换成功后旧数据库保留，不自动删除。从旧预览 Bundle ID 首次升级时也使用 SQLite backup API 保留式迁移。运行无 GUI 自检：
 
 ```bash
@@ -60,9 +74,7 @@ AI设置页允许手动填写配置名称、API服务、Base URL、模型ID和�
 source "$HOME/.cargo/env"
 ```
 
-The Tauri crates and CLI are not downloaded yet. The first dependency fetch and
-build must be performed as a separate, size-monitored batch. Until then, open
-`workbench-prototype/index.html` directly to use the prototype.
+Tauri crates 和 CLI 不是轻量 AppKit 构建的前置条件。只有开发 Tauri 壳时才进入 `src-tauri` 执行一次受控 `cargo fetch`；依赖下载应单独监控体积。
 
 ## Disk protection
 
