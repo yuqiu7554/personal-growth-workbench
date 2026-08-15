@@ -33,8 +33,10 @@ codesign --verify --deep --strict "$desktop_app"
 cmp "$build_app/Contents/MacOS/GrowthWorkbench" "$desktop_app/Contents/MacOS/GrowthWorkbench"
 cmp "$build_app/Contents/Info.plist" "$desktop_app/Contents/Info.plist"
 cmp "$build_app/Contents/PrivacyInfo.xcprivacy" "$desktop_app/Contents/PrivacyInfo.xcprivacy"
+cmp "$build_app/Contents/Resources/AppIcon.icns" "$desktop_app/Contents/Resources/AppIcon.icns"
 diff -qr "$build_app/Contents/Resources/workbench-prototype" "$desktop_app/Contents/Resources/workbench-prototype"
 "$desktop_app/Contents/MacOS/GrowthWorkbench" --database-self-test
+"$desktop_app/Contents/MacOS/GrowthWorkbench" --bundle-migration-self-test
 "$desktop_app/Contents/MacOS/GrowthWorkbench" --backup-self-test
 backup_count=$(find "$backup_dir" -mindepth 1 -maxdepth 1 -name '*.app' -type d | wc -l | tr -d ' ')
 if [ "$backup_count" -ne 1 ]; then
