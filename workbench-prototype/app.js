@@ -217,7 +217,7 @@
   }
 
   function moduleRows(target, setup = false) {
-    target.innerHTML = moduleDefinitions.map(module => `<label class="module-setting-row"><span><strong>${module.label}</strong><small>${module.description}</small></span><input type="checkbox" role="switch" data-module-toggle="${module.id}" ${state.settings.modulePreferences[module.id] ? 'checked' : ''}></label>`).join('');
+    setSafeMarkup(target, moduleDefinitions.map(module => `<label class="module-setting-row"><span><strong>${escapeHtml(module.label)}</strong><small>${escapeHtml(module.description)}</small></span><input type="checkbox" role="switch" data-module-toggle="${escapeHtml(module.id)}" ${state.settings.modulePreferences[module.id] ? 'checked' : ''}></label>`).join(''));
     if (!setup) all('[data-module-toggle]', target).forEach(input => input.addEventListener('change', changeModulePreference));
   }
 
@@ -265,8 +265,8 @@
 
   function renderTasks() {
     const keyTasks = state.tasks.filter(task => task.key).slice(0, 3);
-    el('#keyTaskList').innerHTML = keyTasks.map(taskRow).join('');
-    el('#allTaskList').innerHTML = state.tasks.map(taskRow).join('');
+    setSafeMarkup(el('#keyTaskList'), keyTasks.map(taskRow).join(''));
+    setSafeMarkup(el('#allTaskList'), state.tasks.map(taskRow).join(''));
     all('.task-check').forEach(input => input.addEventListener('change', toggleTask));
     const keyDone = keyTasks.filter(task => task.done).length;
     const allDone = state.tasks.filter(task => task.done).length;
@@ -298,8 +298,8 @@
   }
 
   function renderGoals() {
-    el('#goalSummary').innerHTML = state.goals.slice(0, 3).map(goal => `<article class="goal-mini"><strong>${escapeHtml(goal.title)}</strong><span>${escapeHtml(goal.next)}</span><b>${goal.progress}%</b></article>`).join('');
-    el('#goalPageGrid').innerHTML = state.goals.map(goal => `<article class="goal-card"><header><span class="status-tag">${escapeHtml(goal.type)}</span><span class="status-tag ${['轻度迟缓', '严重迟缓', '停滞'].includes(goal.state) ? 'warning' : ''}">${escapeHtml(goal.state)}</span></header><h2>${escapeHtml(goal.title)}</h2><p>下一里程碑：${escapeHtml(goal.next)}</p>${goal.deadline ? `<small>截止日期：${escapeHtml(goal.deadline)}</small>` : ''}<div class="progress-track"><span style="width:${goal.progress}%"></span></div><footer><span>当前进度</span><b>${goal.progress}%</b></footer></article>`).join('');
+    setSafeMarkup(el('#goalSummary'), state.goals.slice(0, 3).map(goal => `<article class="goal-mini"><strong>${escapeHtml(goal.title)}</strong><span>${escapeHtml(goal.next)}</span><b>${Math.max(0, Math.min(100, Number(goal.progress) || 0))}%</b></article>`).join(''));
+    setSafeMarkup(el('#goalPageGrid'), state.goals.map(goal => { const progress = Math.max(0, Math.min(100, Number(goal.progress) || 0)); return `<article class="goal-card"><header><span class="status-tag">${escapeHtml(goal.type)}</span><span class="status-tag ${['轻度迟缓', '严重迟缓', '停滞'].includes(goal.state) ? 'warning' : ''}">${escapeHtml(goal.state)}</span></header><h2>${escapeHtml(goal.title)}</h2><p>下一里程碑：${escapeHtml(goal.next)}</p>${goal.deadline ? `<small>截止日期：${escapeHtml(goal.deadline)}</small>` : ''}<div class="progress-track"><span style="width:${progress}%"></span></div><footer><span>当前进度</span><b>${progress}%</b></footer></article>`; }).join(''));
   }
 
   function openGoalDialog() {
@@ -323,7 +323,7 @@
   }
 
   function renderNews() {
-    el('#newsList').innerHTML = news.map((item, index) => `<article class="news-row"><span class="news-source">${escapeHtml(item.source)}</span><strong>${escapeHtml(item.title)}</strong><button type="button" data-news-index="${index}" aria-label="收藏资讯">☆</button></article>`).join('');
+    setSafeMarkup(el('#newsList'), news.map((item, index) => `<article class="news-row"><span class="news-source">${escapeHtml(item.source)}</span><strong>${escapeHtml(item.title)}</strong><button type="button" data-news-index="${index}" aria-label="收藏资讯">☆</button></article>`).join(''));
     all('[data-news-index]').forEach(button => button.addEventListener('click', () => {
       button.textContent = button.textContent === '☆' ? '★' : '☆';
       showToast(button.textContent === '★' ? '已收藏到物流资讯' : '已取消收藏');
@@ -334,14 +334,14 @@
     const feed = el('#newsFeed');
     if (!feed) return;
     const visibleNews = activeNewsFilter === 'all' ? news : news.filter(item => item.category === activeNewsFilter);
-    feed.innerHTML = visibleNews.length ? visibleNews.map((item, index) => {
+    setSafeMarkup(feed, visibleNews.length ? visibleNews.map((item, index) => {
       const feedback = state.newsFeedback[item.id || index] || '';
       const sourceLabel = item.sample ? '合成示例' : `${item.tier || '来源'} · ${item.region || '未知地区'}`;
       const link = item.url ? `<button class="button" type="button" data-external-url="${escapeHtml(item.url)}">打开原文</button>` : '';
       const policy = item.isPolicy ? `<div class="policy-meta"><span>发布机关：${escapeHtml(item.policyAuthority || item.source)}</span><span>政策状态：${escapeHtml(item.policyStatus || '待核验')}</span><span>文号：${escapeHtml(item.documentNumber || '未检出')}</span><span>${item.isOriginalPolicy ? '发布机关原文' : '需回溯发布机关原文'}</span></div>` : '';
       const cross = item.crossSources?.length ? `<p class="cross-sources">交叉来源：${escapeHtml(item.crossSources.map(source => source.source).join('、'))}</p>` : '';
       return `<article class="content-card ${feedback === 'irrelevant' ? 'dimmed' : ''}"><div class="content-card-main"><div class="content-meta"><span class="status-tag ${item.sample ? 'warning' : ''}">${sourceLabel}</span><span>${escapeHtml(item.source)}</span><span>${escapeHtml(item.publishedAt || '示例')}</span></div><h2>${item.major ? '<span class="status-tag warning">重大</span> ' : ''}${escapeHtml(item.title)}</h2><p>${escapeHtml(item.summary || (item.sample ? '当前为合成示例，点击“立即更新”获取真实来源数据。' : '摘要尚未生成，请通过原文核对事实。'))}</p>${policy}${cross}<div class="tag-row"><span>${escapeHtml(item.category || '物流工程')}</span><span>${escapeHtml(item.region || '相关地区')}</span></div></div><div class="card-actions">${link}<button type="button" data-news-action="favorite" data-index="${escapeHtml(item.id || index)}">${feedback === 'favorite' ? '已收藏' : '收藏'}</button><button type="button" data-news-action="irrelevant" data-index="${escapeHtml(item.id || index)}">${feedback === 'irrelevant' ? '撤销不相关' : '不相关'}</button></div></article>`;
-    }).join('') : '<div class="empty-state"><strong>当前筛选暂无30天内可信内容</strong><span>工作台不会用合成新闻补足数量，可调整来源设置后重新同步。</span></div>';
+    }).join('') : '<div class="empty-state"><strong>当前筛选暂无30天内可信内容</strong><span>工作台不会用合成新闻补足数量，可调整来源设置后重新同步。</span></div>');
     all('[data-news-action]').forEach(button => button.addEventListener('click', handleNewsFeedback));
   }
 
@@ -389,9 +389,8 @@
   }
 
   function plainNewsText(value) {
-    const container = document.createElement('div');
-    container.innerHTML = String(value || '');
-    return (container.textContent || '').replace(/\s+/g, ' ').trim();
+    const parsed = new DOMParser().parseFromString(String(value || ''), 'text/html');
+    return (parsed.body.textContent || '').replace(/\s+/g, ' ').trim();
   }
 
   function classifyNews(item, fallback) {
@@ -454,7 +453,7 @@
   }
 
   function normalizedPaperTitle(value) {
-    return String(value || '').toLowerCase().replace(/<[^>]*>/g, '').replace(/[^a-z0-9\u4e00-\u9fff]+/g, ' ').trim();
+    return plainNewsText(value).toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g, ' ').trim();
   }
 
   async function verifyPaperDois(items) {
@@ -620,10 +619,10 @@
   function renderPapers() {
     const feed = el('#paperFeed');
     if (!feed) return;
-    feed.innerHTML = paperRecommendations.map(paper => {
+    setSafeMarkup(feed, paperRecommendations.map(paper => {
       const status = state.paperStatus[paper.id] || '未读';
       return paperCard(paper, status, false);
-    }).join('');
+    }).join(''));
     all('[data-paper-status]').forEach(select => select.addEventListener('change', event => { state.paperStatus[event.target.dataset.paperStatus] = event.target.value; saveState(); renderPapers(); showToast('阅读状态已保存'); }));
     all('[data-paper-task]').forEach(button => button.addEventListener('click', () => addPaperTask(button.dataset.paperTask)));
     all('[data-paper-library]').forEach(button => button.addEventListener('click', () => openPaperLibrary(paperRecommendations.find(item => String(item.id) === button.dataset.paperLibrary))));
@@ -650,7 +649,7 @@
       if (seen.has(key)) return false;
       seen.add(key); return true;
     });
-    feed.innerHTML = papers.length ? papers.map(paper => paperCard(paper, state.paperStatus[paper.id] || '未读', true)).join('') : '<div class="empty-state"><strong>过去四周暂无推荐记录</strong><span>正式推荐开始归档后，这里会按自然周显示往期论文；本周推荐不会重复出现。</span></div>';
+    setSafeMarkup(feed, papers.length ? papers.map(paper => paperCard(paper, state.paperStatus[paper.id] || '未读', true)).join('') : '<div class="empty-state"><strong>过去四周暂无推荐记录</strong><span>正式推荐开始归档后，这里会按自然周显示往期论文；本周推荐不会重复出现。</span></div>');
     all('[data-paper-library]', feed).forEach(button => button.addEventListener('click', () => openPaperLibrary(papers.find(item => String(item.id) === button.dataset.paperLibrary))));
     all('[data-paper-status]', feed).forEach(select => select.addEventListener('change', event => { state.paperStatus[event.target.dataset.paperStatus] = event.target.value; saveState(); renderPaperHistory(); }));
   }
@@ -661,7 +660,7 @@
   function openPaperLibrary(paper) {
     if (!paper) return;
     pendingPaperLibrary = paper; pendingPaperPdf = null;
-    el('#paperLibraryMetadata').innerHTML = `<strong>${escapeHtml(paper.title)}</strong><span>${paper.year} · ${escapeHtml(paper.journal)}</span><span>严格白名单匹配 · ${escapeHtml(paper.matchedIssn || '标准化刊名匹配')} · ${escapeHtml(paper.doi)}</span>`;
+    setSafeMarkup(el('#paperLibraryMetadata'), `<strong>${escapeHtml(paper.title)}</strong><span>${paper.year} · ${escapeHtml(paper.journal)}</span><span>严格白名单匹配 · ${escapeHtml(paper.matchedIssn || '标准化刊名匹配')} · ${escapeHtml(paper.doi)}</span>`);
     el('#paperPdfStatus').textContent = '未选择，可稍后补充';
     el('#paperReadingLevel').value = '精读';
     el('#paperLibraryDialog').showModal();
@@ -715,7 +714,7 @@
   function renderLibraryFolders(items) {
     const counts = folder => WorkbenchLibraryCore.folderContents(items, state.libraryFolders, folder.id).length;
     const branch = parentId => state.libraryFolders.filter(folder => folder.parentId === parentId).sort((a, b) => a.order - b.order).map(folder => `<div><div class="library-folder-row ${activeLibraryFolder === folder.id ? 'active' : ''}" data-library-folder="${folder.id}"><span>${escapeHtml(folder.name)}</span><b>${counts(folder)}</b>${folder.system ? '' : `<span class="library-folder-actions"><button type="button" data-library-folder-edit="${folder.id}" title="编辑文件夹">✎</button><button type="button" data-library-folder-delete="${folder.id}" title="删除文件夹">×</button></span>`}</div><div class="library-folder-children">${branch(folder.id)}</div></div>`).join('');
-    el('#libraryFolderTree').innerHTML = branch(null);
+    setSafeMarkup(el('#libraryFolderTree'), branch(null));
     el('#libraryAllCount').textContent = items.length;
     el('[data-library-folder="all"]').classList.toggle('active', activeLibraryFolder === 'all');
     all('[data-library-folder]').forEach(row => row.addEventListener('click', event => { if (event.target.closest('.library-folder-actions')) return; activeLibraryFolder = row.dataset.libraryFolder; renderLibrary(); }));
@@ -731,7 +730,7 @@
     const items = allItems.filter(item => !folderIds || folderIds.has(item.folderId || 'system-other')).filter(item => `${item.title} ${item.type} ${item.category} ${item.sourceModule || ''} ${item.doi || ''} ${item.journal || ''}`.toLowerCase().includes(query));
     const active = state.libraryFolders.find(folder => folder.id === activeLibraryFolder);
     el('#libraryBreadcrumb').textContent = active ? active.name : '全部资料';
-    list.innerHTML = items.length ? items.map(item => `<article class="library-row"><div class="library-icon">${item.type === '论文' || item.type === 'PDF' ? 'P' : item.type === '听力音频' ? 'A' : 'R'}</div><div><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.sourceModule || '手动添加')} · ${escapeHtml(item.type || '资料')} · ${escapeHtml(item.category || '未分类')}</span><small>${item.localPdfName ? `本地文件：${escapeHtml(item.localPdfName)}` : escapeHtml(item.link || '仅保存元数据')}</small></div><div class="inline-actions">${item.localPdfPath ? `<button type="button" data-library-open="${escapeHtml(item.localPdfPath)}">打开</button>` : item.link ? `<button type="button" data-external-url="${escapeHtml(item.link)}">打开</button>` : ''}${item.derived ? `<button type="button" data-go-view="${item.sourceModule}">来源模块</button>` : `<select data-library-move="${item.id}" aria-label="移动到文件夹">${folderOptions(item.folderId || 'system-other')}</select><button type="button" data-library-delete="${item.id}" aria-label="移入回收站">删除</button>`}</div></article>`).join('') : '<div class="empty-state"><strong>当前文件夹为空</strong><span>上传本地文件、扫描文件夹，或从其他模块导入资料后会自动建立索引。</span></div>';
+    setSafeMarkup(list, items.length ? items.map(item => `<article class="library-row"><div class="library-icon">${item.type === '论文' || item.type === 'PDF' ? 'P' : item.type === '听力音频' ? 'A' : 'R'}</div><div><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.sourceModule || '手动添加')} · ${escapeHtml(item.type || '资料')} · ${escapeHtml(item.category || '未分类')}</span><small>${item.localPdfName ? `本地文件：${escapeHtml(item.localPdfName)}` : escapeHtml(item.link || '仅保存元数据')}</small></div><div class="inline-actions">${item.localPdfPath ? `<button type="button" data-library-open="${escapeHtml(item.localPdfPath)}">打开</button>` : item.link ? `<button type="button" data-external-url="${escapeHtml(item.link)}">打开</button>` : ''}${item.derived ? `<button type="button" data-go-view="${escapeHtml(item.sourceModule)}">来源模块</button>` : `<select data-library-move="${escapeHtml(item.id)}" aria-label="移动到文件夹">${folderOptions(item.folderId || 'system-other')}</select><button type="button" data-library-delete="${escapeHtml(item.id)}" aria-label="移入回收站">删除</button>`}</div></article>`).join('') : '<div class="empty-state"><strong>当前文件夹为空</strong><span>上传本地文件、扫描文件夹，或从其他模块导入资料后会自动建立索引。</span></div>');
     el('#libraryNavCount').textContent = allItems.length;
     all('[data-library-open]').forEach(button => button.addEventListener('click', () => callNative('openLibraryFile', { path: button.dataset.libraryOpen }).catch(() => showToast('文件失效，请重新定位'))));
     all('[data-library-delete]').forEach(button => button.addEventListener('click', () => moveLibraryItemToRecycleBin(Number(button.dataset.libraryDelete))));
@@ -757,7 +756,7 @@
     if (!list) return;
     el('#recycleBinStatus').textContent = state.recycleBin.length ? `${state.recycleBin.length} 项，本地保留30天` : '本地保留30天，到期自动删除';
     el('#emptyRecycleBinButton').disabled = !state.recycleBin.length;
-    list.innerHTML = state.recycleBin.length ? state.recycleBin.map(item => `<article class="recycle-row"><div><strong>${escapeHtml(item.title)}</strong><span>剩余 ${recycleDaysRemaining(item)} 天${item.localPdfName ? ` · 含本地 PDF ${escapeHtml(item.localPdfName)}` : ''}</span></div><div><button class="button" type="button" data-recycle-restore="${item.id}">恢复</button><button class="button" type="button" data-recycle-delete="${item.id}">永久删除</button></div></article>`).join('') : '<div class="empty-state"><strong>回收站为空</strong><span>从资料库删除的资源会在本机保留30天。</span></div>';
+    setSafeMarkup(list, state.recycleBin.length ? state.recycleBin.map(item => `<article class="recycle-row"><div><strong>${escapeHtml(item.title)}</strong><span>剩余 ${recycleDaysRemaining(item)} 天${item.localPdfName ? ` · 含本地 PDF ${escapeHtml(item.localPdfName)}` : ''}</span></div><div><button class="button" type="button" data-recycle-restore="${escapeHtml(item.id)}">恢复</button><button class="button" type="button" data-recycle-delete="${escapeHtml(item.id)}">永久删除</button></div></article>`).join('') : '<div class="empty-state"><strong>回收站为空</strong><span>从资料库删除的资源会在本机保留30天。</span></div>');
     all('[data-recycle-restore]', list).forEach(button => button.addEventListener('click', () => restoreRecycledItem(Number(button.dataset.recycleRestore))));
     all('[data-recycle-delete]', list).forEach(button => button.addEventListener('click', () => permanentlyDeleteRecycledItem(Number(button.dataset.recycleDelete), true)));
   }
@@ -815,7 +814,7 @@
     el('#libraryFolderDialogTitle').textContent = folder ? '编辑文件夹' : '新建文件夹';
     el('#libraryFolderEditingId').value = folder?.id || '';
     el('#libraryFolderName').value = folder?.name || '';
-    el('#libraryFolderParent').innerHTML = `<option value="">顶层</option>${folderOptions(folder?.parentId || '', folder?.id || '')}`;
+    setSafeMarkup(el('#libraryFolderParent'), `<option value="">顶层</option>${folderOptions(folder?.parentId || '', folder?.id || '')}`);
     el('#libraryFolderDialog').showModal();
   }
 
@@ -848,8 +847,8 @@
   async function chooseLibraryFiles(action) {
     try {
       const result = await callNative(action); pendingLibraryFiles = result.files || [];
-      el('#libraryPendingFiles').innerHTML = pendingLibraryFiles.length ? pendingLibraryFiles.map(file => `<div class="research-record-row"><div><strong>${escapeHtml(file.name)}</strong><span>${escapeHtml(WorkbenchLibraryCore.fileType(file.name))} · ${formatBytes(Number(file.size || 0))}</span></div><span class="status-tag">待导入</span></div>`).join('') : '<div class="empty-state compact-empty"><strong>未发现支持的文件</strong></div>';
-      el('#libraryImportFolder').innerHTML = folderOptions(activeLibraryFolder === 'all' ? 'system-other' : activeLibraryFolder);
+      setSafeMarkup(el('#libraryPendingFiles'), pendingLibraryFiles.length ? pendingLibraryFiles.map(file => `<div class="research-record-row"><div><strong>${escapeHtml(file.name)}</strong><span>${escapeHtml(WorkbenchLibraryCore.fileType(file.name))} · ${formatBytes(Number(file.size || 0))}</span></div><span class="status-tag">待导入</span></div>`).join('') : '<div class="empty-state compact-empty"><strong>未发现支持的文件</strong></div>');
+      setSafeMarkup(el('#libraryImportFolder'), folderOptions(activeLibraryFolder === 'all' ? 'system-other' : activeLibraryFolder));
       el('#libraryImportStatus').textContent = `已选择 ${pendingLibraryFiles.length} 个文件`;
       el('#libraryImportDialog').showModal();
     } catch (error) { if (error.message !== 'cancelled') showToast('无法读取所选文件'); }
@@ -891,7 +890,7 @@
     const root = el('#cet6MaterialList');
     if (!root) return;
     const fileRows = material => ['paper', 'answer', 'audio'].flatMap(type => (material[type] || []).map(file => `<div class="cet6-material-file"><span><b>${type === 'paper' ? '试卷' : type === 'answer' ? '答案' : '音频'}</b> · ${escapeHtml(file.fileName || file.name)}</span><button type="button" data-cet6-open-file="${escapeHtml(file.path)}">${type === 'audio' ? '加载播放' : '应用内查看'}</button></div>`)).join('');
-    root.innerHTML = state.cet6Materials.length ? state.cet6Materials.map(material => `<article class="cet6-material-card"><header><div><strong>${escapeHtml(materialTitle(material))}</strong><span class="status-tag">${material.managed ? '本地资料库' : '引用原文件'}</span></div><button type="button" data-cet6-delete-material="${escapeHtml(material.id)}">删除</button></header><div class="cet6-material-files">${fileRows(material) || '<span class="muted-note">尚未关联文件</span>'}</div></article>`).join('') : '<div class="empty-state"><strong>尚未导入 CET-6 资料</strong><span>可以选择文件夹自动建议配对，也可以只使用纸质版计时。</span></div>';
+    setSafeMarkup(root, state.cet6Materials.length ? state.cet6Materials.map(material => `<article class="cet6-material-card"><header><div><strong>${escapeHtml(materialTitle(material))}</strong><span class="status-tag">${material.managed ? '本地资料库' : '引用原文件'}</span></div><button type="button" data-cet6-delete-material="${escapeHtml(material.id)}">删除</button></header><div class="cet6-material-files">${fileRows(material) || '<span class="muted-note">尚未关联文件</span>'}</div></article>`).join('') : '<div class="empty-state"><strong>尚未导入 CET-6 资料</strong><span>可以选择文件夹自动建议配对，也可以只使用纸质版计时。</span></div>');
     if (state.cet6Trash.length) root.insertAdjacentHTML('beforeend', `<details class="checkpoint-trash"><summary>资料回收站（${state.cet6Trash.length}）</summary>${state.cet6Trash.map(item => `<div class="cet6-material-file"><span>${escapeHtml(materialTitle(item.material))} · ${Math.max(0, 30 - Math.floor((Date.now() - new Date(item.deletedAt)) / 86400000))}天后删除</span><button type="button" data-cet6-restore-material="${escapeHtml(item.material.id)}">恢复</button></div>`).join('')}</details>`);
     all('[data-cet6-open-file]', root).forEach(button => button.addEventListener('click', openCet6File));
     all('[data-cet6-delete-material]', root).forEach(button => button.addEventListener('click', deleteCet6Material));
@@ -923,8 +922,8 @@
   }
 
   function renderCet6Import(files) {
-    el('#cet6ImportSummary').innerHTML = `<strong>发现 ${files.length} 个支持的文件</strong><span>${pendingCet6Import.length} 组可按文件名识别；未读取试卷正文。</span>`;
-    el('#cet6ImportGroups').innerHTML = pendingCet6Import.length ? pendingCet6Import.map((group, index) => `<article class="cet6-import-group" data-import-group="${index}"><header><label class="inline-checkbox"><input type="checkbox" checked data-import-enabled>导入这一套</label><span>${group.paper.length}份试卷 · ${group.answer.length}份答案 · ${group.audio.length}段音频</span></header><div class="form-grid"><label>年份 *<input type="number" min="2000" max="2100" value="${group.year}" data-import-year></label><label>月份 *<input type="number" min="1" max="12" value="${group.month}" data-import-month></label><label>套次 *<input type="number" min="1" max="20" value="${group.set}" data-import-set></label><label>识别结果<input value="${escapeHtml(materialTitle(group))}" readonly></label></div><div class="cet6-material-files">${['paper', 'answer', 'audio'].flatMap(type => group[type].map(file => `<span>${type === 'paper' ? '试卷' : type === 'answer' ? '答案' : '音频'} · ${escapeHtml(file.name)}</span>`)).join('')}</div></article>`).join('') : '<div class="empty-state"><strong>没有识别出完整的年月与套次</strong><span>请调整文件名后重新选择；第一版不会读取正文推测资料。</span></div>';
+    setSafeMarkup(el('#cet6ImportSummary'), `<strong>发现 ${files.length} 个支持的文件</strong><span>${pendingCet6Import.length} 组可按文件名识别；未读取试卷正文。</span>`);
+    setSafeMarkup(el('#cet6ImportGroups'), pendingCet6Import.length ? pendingCet6Import.map((group, index) => `<article class="cet6-import-group" data-import-group="${index}"><header><label class="inline-checkbox"><input type="checkbox" checked data-import-enabled>导入这一套</label><span>${group.paper.length}份试卷 · ${group.answer.length}份答案 · ${group.audio.length}段音频</span></header><div class="form-grid"><label>年份 *<input type="number" min="2000" max="2100" value="${Number(group.year)}" data-import-year></label><label>月份 *<input type="number" min="1" max="12" value="${Number(group.month)}" data-import-month></label><label>套次 *<input type="number" min="1" max="20" value="${Number(group.set)}" data-import-set></label><label>识别结果<input value="${escapeHtml(materialTitle(group))}" readonly></label></div><div class="cet6-material-files">${['paper', 'answer', 'audio'].flatMap(type => group[type].map(file => `<span>${type === 'paper' ? '试卷' : type === 'answer' ? '答案' : '音频'} · ${escapeHtml(file.name)}</span>`)).join('')}</div></article>`).join('') : '<div class="empty-state"><strong>没有识别出完整的年月与套次</strong><span>请调整文件名后重新选择；第一版不会读取正文推测资料。</span></div>');
     el('#cet6ImportError').textContent = pendingCet6Import.length ? '' : '至少需要一组能识别年份、月份和套次的资料。';
   }
 
@@ -972,7 +971,7 @@
     const select = el('#cet6TrainingMaterial');
     if (!select) return;
     const selected = select.value;
-    select.innerHTML = '<option value="">不关联资料 / 纸质版 / 其他平台</option>' + state.cet6Materials.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(materialTitle(item))}</option>`).join('');
+    setSafeMarkup(select, '<option value="">不关联资料 / 纸质版 / 其他平台</option>' + state.cet6Materials.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(materialTitle(item))}</option>`).join(''));
     if ([...select.options].some(option => option.value === selected)) select.value = selected;
   }
 
@@ -1000,7 +999,7 @@
     el('#cet6SessionSound').checked = state.settings.cet6Sound;
     cet6SetupOrder = [...cet6Modules];
     el('#cet6SetupTitle').textContent = kind === 'paper' ? '套卷训练' : kind === 'timer' ? '纸质版做题，直接开始计时' : '模块组合训练';
-    el('#cet6TimerMode').innerHTML = kind === 'modules' ? '<option value="countdown">总倒计时</option><option value="modules">分模块计时</option>' : '<option value="countdown">总倒计时（默认2小时25分）</option><option value="clock">模拟正计时 15:00–17:25</option><option value="modules">分模块计时</option>';
+    setSafeMarkup(el('#cet6TimerMode'), kind === 'modules' ? '<option value="countdown">总倒计时</option><option value="modules">分模块计时</option>' : '<option value="countdown">总倒计时（默认2小时25分）</option><option value="clock">模拟正计时 15:00–17:25</option><option value="modules">分模块计时</option>');
     renderCet6MaterialOptions();
     if (kind === 'timer') el('#cet6TrainingMaterial').value = '';
     renderCet6SetupModules(kind !== 'modules');
@@ -1011,7 +1010,7 @@
 
   function renderCet6SetupModules(selectAll) {
     const selected = new Set(all('[data-cet6-module-check]:checked').map(input => input.value));
-    el('#cet6ModuleOrder').innerHTML = cet6SetupOrder.map((module, index) => `<div class="cet6-module-row"><input type="checkbox" data-cet6-module-check value="${module}" ${(selectAll || selected.has(module)) ? 'checked' : ''}><span>${module}</span><button type="button" data-module-move="up" data-module-index="${index}" aria-label="上移${module}">↑</button><button type="button" data-module-move="down" data-module-index="${index}" aria-label="下移${module}">↓</button></div>`).join('');
+    setSafeMarkup(el('#cet6ModuleOrder'), cet6SetupOrder.map((module, index) => `<div class="cet6-module-row"><input type="checkbox" data-cet6-module-check value="${escapeHtml(module)}" ${(selectAll || selected.has(module)) ? 'checked' : ''}><span>${escapeHtml(module)}</span><button type="button" data-module-move="up" data-module-index="${index}" aria-label="上移${escapeHtml(module)}">↑</button><button type="button" data-module-move="down" data-module-index="${index}" aria-label="下移${escapeHtml(module)}">↓</button></div>`).join(''));
     all('[data-cet6-module-check]').forEach(input => input.addEventListener('change', updateCet6ModuleTimes));
     all('[data-module-move]').forEach(button => button.addEventListener('click', moveCet6Module));
     updateCet6ModuleTimes();
@@ -1029,7 +1028,7 @@
 
   function updateCet6ModuleTimes() {
     const selected = selectedCet6Modules();
-    el('#cet6ModuleTimes').innerHTML = selected.map(module => `<label class="cet6-module-time-row">${module}<input type="number" min="1" max="180" value="${cet6DefaultModuleMinutes[module]}" data-module-minutes="${module}"><span>分钟</span></label>`).join('');
+    setSafeMarkup(el('#cet6ModuleTimes'), selected.map(module => `<label class="cet6-module-time-row">${escapeHtml(module)}<input type="number" min="1" max="180" value="${Number(cet6DefaultModuleMinutes[module])}" data-module-minutes="${escapeHtml(module)}"><span>分钟</span></label>`).join(''));
   }
 
   function updateCet6SetupFields() {
@@ -1039,7 +1038,7 @@
     const workspaceAudio = el('#cet6AudioMode').value === 'workspace';
     const material = state.cet6Materials.find(item => item.id === el('#cet6TrainingMaterial').value);
     const audio = material?.audio || [];
-    el('#cet6AudioAsset').innerHTML = (audio.length > 1 ? '<option value="__all__">按资料顺序连续播放全部音频</option>' : '') + audio.map((file, index) => `<option value="${escapeHtml(file.path)}">${index + 1}. ${escapeHtml(file.fileName)}</option>`).join('');
+    setSafeMarkup(el('#cet6AudioAsset'), (audio.length > 1 ? '<option value="__all__">按资料顺序连续播放全部音频</option>' : '') + audio.map((file, index) => `<option value="${escapeHtml(file.path)}">${index + 1}. ${escapeHtml(file.fileName)}</option>`).join(''));
     el('#cet6AudioAssetField').hidden = !workspaceAudio;
     if (workspaceAudio && !audio.length) el('#cet6SetupError').textContent = '所选资料没有听力音频；可改用其他设备或不播放。'; else el('#cet6SetupError').textContent = '';
   }
@@ -1067,10 +1066,10 @@
   function renderCet6CurrentSession() {
     const session = state.cet6Training.active;
     const title = el('#cet6CurrentSessionTitle'), summary = el('#cet6CurrentSessionSummary'), resume = el('#resumeCet6SessionButton');
-    if (!session && state.cet6Training.pendingRecord) { title.textContent = '上次训练待填写记录'; summary.innerHTML = '<strong>计时已经结束</strong><span>完成日期和训练模块为必填，其他内容可以稍后补充。</span>'; resume.hidden = false; resume.textContent = '填写记录'; return; }
-    if (!session) { title.textContent = '尚未开始'; summary.innerHTML = '<strong>选择一种训练方式</strong><span>准备完成后仍需点击“开始”，不会自动计时或播放音频。</span>'; resume.hidden = true; return; }
+    if (!session && state.cet6Training.pendingRecord) { title.textContent = '上次训练待填写记录'; setSafeMarkup(summary, '<strong>计时已经结束</strong><span>完成日期和训练模块为必填，其他内容可以稍后补充。</span>'); resume.hidden = false; resume.textContent = '填写记录'; return; }
+    if (!session) { title.textContent = '尚未开始'; setSafeMarkup(summary, '<strong>选择一种训练方式</strong><span>准备完成后仍需点击“开始”，不会自动计时或播放音频。</span>'); resume.hidden = true; return; }
     title.textContent = session.materialTitle || (session.kind === 'timer' ? '纸质版 / 其他平台训练' : '未关联资料训练');
-    summary.innerHTML = `<strong>${escapeHtml(session.modules.join('、'))}</strong><span>${session.timerMode === 'clock' ? '模拟15:00–17:25' : session.timerMode === 'modules' ? '分模块计时' : `总倒计时 ${formatClock(session.totalSeconds)}`} · ${session.status === 'running' ? '进行中' : session.status === 'paused' ? '已暂停' : '准备开始'}</span>`;
+    setSafeMarkup(summary, `<strong>${escapeHtml(session.modules.join('、'))}</strong><span>${session.timerMode === 'clock' ? '模拟15:00–17:25' : session.timerMode === 'modules' ? '分模块计时' : `总倒计时 ${formatClock(session.totalSeconds)}`} · ${session.status === 'running' ? '进行中' : session.status === 'paused' ? '已暂停' : '准备开始'}</span>`);
     resume.hidden = false; resume.textContent = '继续训练';
   }
 
@@ -1082,7 +1081,7 @@
     el('#cet6TrainingModeLabel').textContent = session.timerMode === 'clock' ? '模拟正计时' : session.timerMode === 'modules' ? '分模块计时' : '总倒计时';
     el('#cet6TrainingMaterialLabel').textContent = session.materialTitle || '未关联资料';
     const files = material ? [...(material.paper || []), ...(session.answerViewedAt ? material.answer || [] : [])] : [];
-    el('#cet6TrainingFiles').innerHTML = files.length ? files.map(file => `<button type="button" data-training-file="${escapeHtml(file.path)}"><span>${escapeHtml(file.fileName)}</span><b>预览</b></button>`).join('') + (!session.answerViewedAt && material?.answer?.length ? '<button type="button" id="unlockCet6AnswerButton"><span>答案已锁定</span><b>确认查看</b></button>' : '') : '<div class="empty-state compact-empty"><strong>未关联电子资料</strong><span>可以使用纸质试卷或其他平台继续计时。</span></div>';
+    setSafeMarkup(el('#cet6TrainingFiles'), files.length ? files.map(file => `<button type="button" data-training-file="${escapeHtml(file.path)}"><span>${escapeHtml(file.fileName)}</span><b>预览</b></button>`).join('') + (!session.answerViewedAt && material?.answer?.length ? '<button type="button" id="unlockCet6AnswerButton"><span>答案已锁定</span><b>确认查看</b></button>' : '') : '<div class="empty-state compact-empty"><strong>未关联电子资料</strong><span>可以使用纸质试卷或其他平台继续计时。</span></div>');
     all('[data-training-file]').forEach(button => button.addEventListener('click', async () => { try { await callNative('openLocalTrainingFile', { path: button.dataset.trainingFile }); } catch (_) { showToast('文件失效，请重新定位'); } }));
     el('#unlockCet6AnswerButton')?.addEventListener('click', unlockCet6Answer);
     el('#cet6AudioControls').hidden = session.audioMode !== 'workspace';
@@ -1112,7 +1111,7 @@
     el('#cet6CurrentModuleLabel').textContent = session.timerMode === 'modules' ? (WorkbenchCet6TrainingCore.currentModule(session) || '全部模块完成') : session.modules.join('、');
     el('#cet6TrainingStatus').textContent = session.status === 'running' ? '计时中' : session.status === 'paused' ? '已暂停' : '准备开始';
     el('#cet6StartPauseButton').textContent = session.status === 'running' ? '暂停' : session.status === 'paused' ? '继续' : '开始';
-    el('#cet6ModuleProgress').innerHTML = session.modules.map((module, index) => `<span class="${index === session.moduleIndex ? 'active' : ''}" title="${module}"></span>`).join('');
+    setSafeMarkup(el('#cet6ModuleProgress'), session.modules.map((module, index) => `<span class="${index === session.moduleIndex ? 'active' : ''}" title="${escapeHtml(module)}"></span>`).join(''));
     el('#cet6NextModuleButton').hidden = session.timerMode !== 'modules' || session.moduleIndex >= session.modules.length - 1;
     const remaining = WorkbenchCet6TrainingCore.remainingSeconds(session, now);
     if (session.status === 'running' && remaining <= 300 && remaining > 0 && !session.fiveMinuteNotified) { session.fiveMinuteNotified = true; saveState(); playCet6Alert(660); showToast('本次训练还剩5分钟'); }
@@ -1292,7 +1291,7 @@
       const mockCount = records.filter(record => record.module !== '写作' && /完整|模考/.test(record.material)).length;
       el('#cet6PredictionMetric').textContent = mockCount >= 2 ? '可生成非官方区间' : `${mockCount}/2 次完整模考`;
     }
-    list.innerHTML = records.length ? records.map(record => `<article class="exam-record-row"><div class="record-score"><b>${escapeHtml(record.module)}</b><span>${escapeHtml(examScoreLabel(record, exam))}</span></div><div class="record-main"><strong>${escapeHtml(record.material)}</strong><span>${escapeHtml(record.date)} · ${record.duration || 0}分钟${record.status ? ` · ${escapeHtml(record.status)}` : ''}${record.attachmentName ? ` · 附件：${escapeHtml(record.attachmentName)}` : ''}</span>${record.notes ? `<small>${escapeHtml(record.notes)}</small>` : ''}<div class="review-chips">${(record.reviews || []).length ? record.reviews.map((review, index) => `<button type="button" class="${review.done ? 'done' : ''}" data-review-toggle="${exam}:${record.id}:${index}">${escapeHtml(review.date)} · ${review.done ? '已复盘' : '待复盘'}</button>`).join('') : '<span>尚未安排复盘</span>'}</div></div><div class="record-actions"><input type="date" data-review-date="${exam}:${record.id}" aria-label="新增复盘日期"><button type="button" data-review-add="${exam}:${record.id}">添加复盘</button>${exam === 'cet6' ? `<button type="button" data-cet6-edit-record="${record.id}">编辑</button>` : ''}<button type="button" data-record-delete="${exam}:${record.id}">删除</button></div></article>`).join('') : `<div class="empty-state"><strong>暂无${exam === 'ielts' ? 'IELTS' : 'CET-6'}做题记录</strong><span>两类考试的数据、附件引用、评分与复盘严格分开保存。</span></div>`;
+    setSafeMarkup(list, records.length ? records.map(record => `<article class="exam-record-row"><div class="record-score"><b>${escapeHtml(record.module)}</b><span>${escapeHtml(examScoreLabel(record, exam))}</span></div><div class="record-main"><strong>${escapeHtml(record.material)}</strong><span>${escapeHtml(record.date)} · ${Number(record.duration || 0)}分钟${record.status ? ` · ${escapeHtml(record.status)}` : ''}${record.attachmentName ? ` · 附件：${escapeHtml(record.attachmentName)}` : ''}</span>${record.notes ? `<small>${escapeHtml(record.notes)}</small>` : ''}<div class="review-chips">${(record.reviews || []).length ? record.reviews.map((review, index) => `<button type="button" class="${review.done ? 'done' : ''}" data-review-toggle="${escapeHtml(exam)}:${escapeHtml(record.id)}:${index}">${escapeHtml(review.date)} · ${review.done ? '已复盘' : '待复盘'}</button>`).join('') : '<span>尚未安排复盘</span>'}</div></div><div class="record-actions"><input type="date" data-review-date="${escapeHtml(exam)}:${escapeHtml(record.id)}" aria-label="新增复盘日期"><button type="button" data-review-add="${escapeHtml(exam)}:${escapeHtml(record.id)}">添加复盘</button>${exam === 'cet6' ? `<button type="button" data-cet6-edit-record="${escapeHtml(record.id)}">编辑</button>` : ''}<button type="button" data-record-delete="${escapeHtml(exam)}:${escapeHtml(record.id)}">删除</button></div></article>`).join('') : `<div class="empty-state"><strong>暂无${exam === 'ielts' ? 'IELTS' : 'CET-6'}做题记录</strong><span>两类考试的数据、附件引用、评分与复盘严格分开保存。</span></div>`);
     if (exam === 'cet6' && state.cet6RecordTrash.length) list.insertAdjacentHTML('beforeend', `<details class="checkpoint-trash"><summary>训练记录回收站（${state.cet6RecordTrash.length}）</summary>${state.cet6RecordTrash.map(item => `<div class="cet6-material-file"><span>${escapeHtml(item.record.module)} · ${escapeHtml(item.record.date)}</span><button type="button" data-cet6-restore-record="${escapeHtml(String(item.record.id))}">恢复</button></div>`).join('')}</details>`);
     if (exam === 'ielts' && state.ielts?.recordTrash?.length) list.insertAdjacentHTML('beforeend', `<details class="checkpoint-trash"><summary>训练记录回收站（${state.ielts.recordTrash.length}）</summary>${state.ielts.recordTrash.map(item => `<div class="cet6-material-file"><span>${escapeHtml(item.record.module)} · ${escapeHtml(item.record.date)}</span><button type="button" data-ielts-restore-record="${escapeHtml(String(item.record.id))}">恢复</button></div>`).join('')}</details>`);
     all('[data-review-add]', list).forEach(button => button.addEventListener('click', addReviewDate));
@@ -1349,7 +1348,7 @@
   function renderCet6Reviews() {
     const root = el('#cet6ReviewList'); if (!root) return;
     const rows = state.cet6Records.flatMap(record => (record.reviews || []).filter(review => !review.done).map((review, index) => ({ record, review, index })));
-    root.innerHTML = rows.length ? rows.map(({ record, review, index }) => `<article class="exam-record-row"><div class="record-score"><b>${escapeHtml(record.module)}</b><span>待复盘</span></div><div class="record-main"><strong>${escapeHtml(record.material)}</strong><span>计划日期：${escapeHtml(review.date)}</span></div><div class="record-actions"><button type="button" data-review-toggle="cet6:${record.id}:${index}">标记完成</button></div></article>`).join('') : '<div class="empty-state"><strong>暂无待复盘训练</strong><span>训练记录中添加复盘日期后会显示在这里。</span></div>';
+    setSafeMarkup(root, rows.length ? rows.map(({ record, review, index }) => `<article class="exam-record-row"><div class="record-score"><b>${escapeHtml(record.module)}</b><span>待复盘</span></div><div class="record-main"><strong>${escapeHtml(record.material)}</strong><span>计划日期：${escapeHtml(review.date)}</span></div><div class="record-actions"><button type="button" data-review-toggle="cet6:${escapeHtml(record.id)}:${index}">标记完成</button></div></article>`).join('') : '<div class="empty-state"><strong>暂无待复盘训练</strong><span>训练记录中添加复盘日期后会显示在这里。</span></div>');
     all('[data-review-toggle]', root).forEach(button => button.addEventListener('click', toggleReview));
   }
 
@@ -1401,8 +1400,8 @@
     el('#weeklyStatus').textContent = weekly?.snapshot?.status || (metrics.total ? (rate >= 80 ? '正常' : rate >= 50 ? '轻度迟缓' : '严重迟缓') : '证据不足');
     all('[data-plan-level]').forEach(button => button.classList.toggle('active', button.dataset.planLevel === state.reports.planLevel));
     if (weekly?.snapshot) {
-      el('#weeklyNarrative').innerHTML = weekly.snapshot.narrative;
-      el('#weeklyPlanDraft').innerHTML = weekly.snapshot.proposedTasks.map((item, index) => `<label><input type="checkbox" checked data-week-plan-item value="${escapeHtml(item.id)}" ${weekly.confirmedAt ? 'disabled' : ''}><span><b>${index + 1}</b>${escapeHtml(item.title)}</span></label>`).join('');
+      setSafeMarkup(el('#weeklyNarrative'), weekly.snapshot.narrative);
+      setSafeMarkup(el('#weeklyPlanDraft'), weekly.snapshot.proposedTasks.map((item, index) => `<label><input type="checkbox" checked data-week-plan-item value="${escapeHtml(item.id)}" ${weekly.confirmedAt ? 'disabled' : ''}><span><b>${index + 1}</b>${escapeHtml(item.title)}</span></label>`).join(''));
       el('#confirmWeeklyPlan').disabled = Boolean(weekly.confirmedAt);
       el('#confirmWeeklyPlan').textContent = weekly.confirmedAt ? '已确认写入下周计划' : '确认写入下周计划';
       el('#weeklyConfirmationStatus').textContent = weekly.confirmedAt ? '已确认' : '需确认';
@@ -1411,13 +1410,13 @@
       el('#weeklyConfirmationStatus').textContent = '需生成';
     }
     if (monthly?.snapshot) {
-      el('#monthlyNarrative').innerHTML = monthly.snapshot.narrative;
-      el('#monthlyOutcomes').innerHTML = monthly.snapshot.proposedOutcomes.map(item => `<label><input type="checkbox" checked data-month-outcome value="${escapeHtml(item.id)}" ${monthly.confirmedAt ? 'disabled' : ''}><span>${escapeHtml(item.title)}</span></label>`).join('');
+      setSafeMarkup(el('#monthlyNarrative'), monthly.snapshot.narrative);
+      setSafeMarkup(el('#monthlyOutcomes'), monthly.snapshot.proposedOutcomes.map(item => `<label><input type="checkbox" checked data-month-outcome value="${escapeHtml(item.id)}" ${monthly.confirmedAt ? 'disabled' : ''}><span>${escapeHtml(item.title)}</span></label>`).join(''));
       el('#confirmMonthlyButton').disabled = Boolean(monthly.confirmedAt);
       el('#confirmMonthlyButton').textContent = monthly.confirmedAt ? '已确认下月重点' : '确认下月重点';
       el('#monthlyConfirmationStatus').textContent = monthly.confirmedAt ? '已确认' : '需确认';
     } else {
-      el('#monthlyOutcomes').innerHTML = '<p class="muted-note">生成月报草案后显示3至5项下月成果。</p>';
+      setSafeMarkup(el('#monthlyOutcomes'), '<p class="muted-note">生成月报草案后显示3至5项下月成果。</p>');
       el('#confirmMonthlyButton').disabled = true;
       el('#monthlyConfirmationStatus').textContent = '需生成';
     }
@@ -1490,7 +1489,7 @@
       const notice = document.createElement('div');
       notice.id = 'paperSystemRulesNotice';
       notice.className = 'quality-notice';
-      notice.innerHTML = '<strong>论文系统硬规则</strong><span>IEEE、Q2、二区与 MDPI 永久排除；只有 72 种严格白名单期刊可进入正式推荐。规则先于 DeepSeek 执行且不可关闭。</span>';
+      setSafeMarkup(notice, '<strong>论文系统硬规则</strong><span>IEEE、Q2、二区与 MDPI 永久排除；只有 72 种严格白名单期刊可进入正式推荐。规则先于 DeepSeek 执行且不可关闭。</span>');
       recommendationPanel.querySelector('.ai-form-stack')?.before(notice);
     }
     if (!el('#appearanceSetting')) return;
@@ -1542,12 +1541,12 @@
     }
     const backup = el('[data-settings-panel="backup"]');
     if (backup && !el('#backupStoragePath')) {
-      backup.innerHTML = '<div class="setting-heading"><h2>备份与恢复</h2><p>手动创建完整加密包；应用保持打开且本次会话已有密码时可按计划补做。</p></div><div class="setting-row database-location-row"><div><strong>备份位置</strong><span>用户选择的本地文件夹或 iCloud Drive 目录</span></div><code id="backupStoragePath">尚未选择</code></div><div class="database-actions"><button class="button" id="chooseBackupDirectoryButton" type="button">选择备份目录</button><button class="button" id="openBackupFolderButton" type="button">打开目录</button></div><div class="setting-row"><div><strong>备份计划</strong><span>当前版本生成完整加密包；不会保存密码或退化为明文</span></div><select id="backupScheduleSetting"><option value="daily-weekly">每日完整加密包</option><option value="weekly">每周完整加密包</option><option value="manual">仅手动</option></select></div><div class="backup-password-grid"><label>备份密码<input id="backupPasswordInput" type="password" autocomplete="new-password" placeholder="至少8位；不会写入数据库或备份"></label><label>再次输入<input id="backupPasswordConfirm" type="password" autocomplete="new-password"></label></div><div class="backup-status"><div><span>最近备份</span><strong id="lastBackupLabel">尚未创建</strong></div><div><span>加密包大小</span><strong id="backupSizeLabel">0 B</strong></div></div><p id="backupOperationStatus" class="ai-connection-notice neutral">创建备份后，密码仅保留在本次应用会话中用于补做；关闭应用即清除。</p><div class="ai-settings-footer"><button class="button" id="restoreBackupButton" type="button">检查并恢复备份</button><button class="button primary" id="createSnapshotButton" type="button">创建完整加密备份</button></div>';
+      setSafeMarkup(backup, '<div class="setting-heading"><h2>备份与恢复</h2><p>手动创建完整加密包；应用保持打开且本次会话已有密码时可按计划补做。</p></div><div class="setting-row database-location-row"><div><strong>备份位置</strong><span>用户选择的本地文件夹或 iCloud Drive 目录</span></div><code id="backupStoragePath">尚未选择</code></div><div class="database-actions"><button class="button" id="chooseBackupDirectoryButton" type="button">选择备份目录</button><button class="button" id="openBackupFolderButton" type="button">打开目录</button></div><div class="setting-row"><div><strong>备份计划</strong><span>当前版本生成完整加密包；不会保存密码或退化为明文</span></div><select id="backupScheduleSetting"><option value="daily-weekly">每日完整加密包</option><option value="weekly">每周完整加密包</option><option value="manual">仅手动</option></select></div><div class="backup-password-grid"><label>备份密码<input id="backupPasswordInput" type="password" autocomplete="new-password" placeholder="至少8位；不会写入数据库或备份"></label><label>再次输入<input id="backupPasswordConfirm" type="password" autocomplete="new-password"></label></div><div class="backup-status"><div><span>最近备份</span><strong id="lastBackupLabel">尚未创建</strong></div><div><span>加密包大小</span><strong id="backupSizeLabel">0 B</strong></div></div><p id="backupOperationStatus" class="ai-connection-notice neutral">创建备份后，密码仅保留在本次应用会话中用于补做；关闭应用即清除。</p><div class="ai-settings-footer"><button class="button" id="restoreBackupButton" type="button">检查并恢复备份</button><button class="button primary" id="createSnapshotButton" type="button">创建完整加密备份</button></div>');
       el('#chooseBackupDirectoryButton').addEventListener('click', chooseBackupDirectory); el('#openBackupFolderButton').addEventListener('click', openBackupFolder); el('#createSnapshotButton').addEventListener('click', createEncryptedBackup); el('#restoreBackupButton').addEventListener('click', inspectAndRestoreBackup); el('#backupScheduleSetting').addEventListener('change', event => { state.settings.backupSchedule = event.target.value; saveState(); maybeRunBackupCatchUp(); });
     }
     if (backup && el('#backupScheduleSetting')) el('#backupScheduleSetting').value = state.settings.backupSchedule || 'daily-weekly';
     const about = el('[data-settings-panel="about"]');
-    if (about && !el('#githubRepoSetting')) { about.innerHTML = '<div class="setting-heading"><h2>关于个人成长工作台</h2><p>本地优先的学习、科研、规划与健康管理桌面应用。</p></div><div class="setting-row"><div><strong>项目与作者</strong><span>个人成长工作台</span></div><b>邱昱</b></div><div class="setting-row"><div><strong>当前版本</strong><span>macOS 桌面预发布版本</span></div><b>0.6.0 (13)</b></div><div class="setting-row"><div><strong>开源许可</strong><span>修改版分发时须按许可证提供对应源码</span></div><b>GPL-3.0-only</b></div><div class="setting-row"><div><strong>技术架构</strong><span>AppKit + WebKit + SQLite + macOS 钥匙串</span></div><b>本地优先</b></div><label class="help-search">GitHub 仓库地址<input id="githubRepoSetting" type="url" placeholder="https://github.com/yuqiu7554/personal-growth-workbench"></label><p id="updateCheckStatus" class="ai-connection-notice neutral">尚未配置更新源</p><div class="ai-settings-footer"><button class="button" id="openLicensesButton" type="button">开源许可与第三方声明</button><button class="button" id="checkUpdatesButton" type="button">检查更新</button><button class="button primary" id="saveAboutSettingsButton" type="button">保存关于设置</button></div>';
+    if (about && !el('#githubRepoSetting')) { setSafeMarkup(about, '<div class="setting-heading"><h2>关于个人成长工作台</h2><p>本地优先的学习、科研、规划与健康管理桌面应用。</p></div><div class="setting-row"><div><strong>项目与作者</strong><span>个人成长工作台</span></div><b>邱昱</b></div><div class="setting-row"><div><strong>当前版本</strong><span>macOS 桌面预发布版本</span></div><b>0.6.0 (13)</b></div><div class="setting-row"><div><strong>开源许可</strong><span>修改版分发时须按许可证提供对应源码</span></div><b>GPL-3.0-only</b></div><div class="setting-row"><div><strong>技术架构</strong><span>AppKit + WebKit + SQLite + macOS 钥匙串</span></div><b>本地优先</b></div><label class="help-search">GitHub 仓库地址<input id="githubRepoSetting" type="url" placeholder="https://github.com/yuqiu7554/personal-growth-workbench"></label><p id="updateCheckStatus" class="ai-connection-notice neutral">尚未配置更新源</p><div class="ai-settings-footer"><button class="button" id="openLicensesButton" type="button">开源许可与第三方声明</button><button class="button" id="checkUpdatesButton" type="button">检查更新</button><button class="button primary" id="saveAboutSettingsButton" type="button">保存关于设置</button></div>');
       el('#saveAboutSettingsButton').addEventListener('click', saveAboutSettings); el('#checkUpdatesButton').addEventListener('click', checkForUpdates); el('#openLicensesButton').addEventListener('click', () => window.alert('第三方资源、来源、许可和替换边界记录在应用源码的 OPEN_SOURCE_RESOURCES.md。正式发布包将附带 THIRD_PARTY_NOTICES.md。'));
     }
     if (el('#githubRepoSetting')) el('#githubRepoSetting').value = state.settings.githubRepository || '';
@@ -1582,10 +1581,10 @@
       el('#aiAssistantSettings').addEventListener('change', event => { const select = event.target.closest('[data-assistant-profile]'); if (!select) return; const profile = state.settings.aiProfiles[select.value]; const section = select.closest('.ai-assistant-setting'); const readOnly = all('input[readonly]', section); if (readOnly[0]) readOnly[0].value = profile?.provider || ''; if (readOnly[1]) readOnly[1].value = profile?.baseUrl || ''; if (readOnly[2]) readOnly[2].value = `引用“${profile?.name || profile?.id || ''}”的 macOS 钥匙串密钥`; });
     }
     el('#aiGlobalBudgetSetting').value = state.settings.aiGlobalBudget || 0;
-    el('#aiServiceProfileChooser').innerHTML = Object.values(state.settings.aiProfiles).map(profile => `<option value="${escapeHtml(profile.id)}">${escapeHtml(profile.name || profile.id)}</option>`).join(''); el('#aiServiceProfileChooser').value = state.settings.aiProfile;
+    setSafeMarkup(el('#aiServiceProfileChooser'), Object.values(state.settings.aiProfiles).map(profile => `<option value="${escapeHtml(profile.id)}">${escapeHtml(profile.name || profile.id)}</option>`).join('')); el('#aiServiceProfileChooser').value = state.settings.aiProfile;
     const activeServiceProfile = state.settings.aiProfiles[state.settings.aiProfile]; el('#aiInputPriceSetting').value = activeServiceProfile?.inputPricePerMillion || 0; el('#aiOutputPriceSetting').value = activeServiceProfile?.outputPricePerMillion || 0;
     const profileOptions = Object.values(state.settings.aiProfiles).map(profile => `<option value="${escapeHtml(profile.id)}">${escapeHtml(profile.name || profile.id)} · ${escapeHtml(profile.provider)}</option>`).join('');
-    el('#aiAssistantSettings').innerHTML = WorkbenchSettingsCore.ASSISTANTS.map(def => { const config = state.settings.aiAssistants[def.id]; const profile = state.settings.aiProfiles[config.profileId] || Object.values(state.settings.aiProfiles)[0]; const usage = `${Math.round(Number(config.inputTokens || 0) + Number(config.outputTokens || 0)).toLocaleString('zh-CN')} Token · ${profile?.inputPricePerMillion > 0 || profile?.outputPricePerMillion > 0 ? `约 ${Number(config.spent || 0).toFixed(4)} 元` : '费用未知'}`; return `<section class="ai-assistant-setting" data-assistant-section="${def.id}"><header><div><h3>${escapeHtml(def.name)}</h3><p>${escapeHtml(def.scope)}</p></div><input type="checkbox" role="switch" data-assistant-enabled="${def.id}" ${config.enabled ? 'checked' : ''}></header><div class="assistant-config-grid"><label>服务配置<select data-assistant-profile="${def.id}">${profileOptions}</select></label><label>API 服务<input value="${escapeHtml(profile?.provider || '')}" readonly></label><label class="wide">Base URL<input value="${escapeHtml(profile?.baseUrl || '')}" readonly></label><label class="wide">API Key<input value="引用“${escapeHtml(profile?.name || profile?.id || '')}”的 macOS 钥匙串密钥" readonly></label><label>Model ID<input data-assistant-model="${def.id}" value="${escapeHtml(config.model || profile?.defaultModel || '')}"></label><label>本月预算（元）<input data-assistant-budget="${def.id}" type="number" min="0" step="1" value="${Number(config.budget || 0)}"></label></div><div class="assistant-setting-footer"><label><input type="checkbox" data-assistant-preview="${def.id}" ${config.preview ? 'checked' : ''}> 调用前预览</label><span>${usage}</span><span data-assistant-key-status="${def.id}">钥匙串状态待测试</span><button class="button" data-test-assistant="${def.id}" type="button">测试连接</button></div></section>`; }).join('');
+    setSafeMarkup(el('#aiAssistantSettings'), WorkbenchSettingsCore.ASSISTANTS.map(def => { const config = state.settings.aiAssistants[def.id]; const profile = state.settings.aiProfiles[config.profileId] || Object.values(state.settings.aiProfiles)[0]; const usage = `${Math.round(Number(config.inputTokens || 0) + Number(config.outputTokens || 0)).toLocaleString('zh-CN')} Token · ${profile?.inputPricePerMillion > 0 || profile?.outputPricePerMillion > 0 ? `约 ${Number(config.spent || 0).toFixed(4)} 元` : '费用未知'}`; return `<section class="ai-assistant-setting" data-assistant-section="${def.id}"><header><div><h3>${escapeHtml(def.name)}</h3><p>${escapeHtml(def.scope)}</p></div><input type="checkbox" role="switch" data-assistant-enabled="${def.id}" ${config.enabled ? 'checked' : ''}></header><div class="assistant-config-grid"><label>服务配置<select data-assistant-profile="${def.id}">${profileOptions}</select></label><label>API 服务<input value="${escapeHtml(profile?.provider || '')}" readonly></label><label class="wide">Base URL<input value="${escapeHtml(profile?.baseUrl || '')}" readonly></label><label class="wide">API Key<input value="引用“${escapeHtml(profile?.name || profile?.id || '')}”的 macOS 钥匙串密钥" readonly></label><label>Model ID<input data-assistant-model="${def.id}" value="${escapeHtml(config.model || profile?.defaultModel || '')}"></label><label>本月预算（元）<input data-assistant-budget="${def.id}" type="number" min="0" step="1" value="${Number(config.budget || 0)}"></label></div><div class="assistant-setting-footer"><label><input type="checkbox" data-assistant-preview="${def.id}" ${config.preview ? 'checked' : ''}> 调用前预览</label><span>${usage}</span><span data-assistant-key-status="${def.id}">钥匙串状态待测试</span><button class="button" data-test-assistant="${def.id}" type="button">测试连接</button></div></section>`; }).join(''));
     WorkbenchSettingsCore.ASSISTANTS.forEach(def => { const select = el(`[data-assistant-profile="${def.id}"]`); if (select) select.value = state.settings.aiAssistants[def.id].profileId; });
   }
 
@@ -1612,11 +1611,11 @@
     if (el('#menstrualTrackingSetting')) el('#menstrualTrackingSetting').checked = state.settings.menstrualTrackingEnabled;
     const panel = el('[data-settings-panel="notifications"]'); const tab = el('[data-settings-tab="notifications"]'); if (tab) tab.textContent = '声音和通知';
     if (panel && !el('#notificationSettingsRoot')) {
-      panel.innerHTML = `<div id="notificationSettingsRoot"><div class="setting-heading"><h2>声音和通知</h2><p>首次开启提醒时再请求 macOS 权限；锁屏仅显示中性文案。</p></div><div class="setting-row"><div><strong>系统通知权限</strong><span id="notificationPermissionStatus">尚未检查</span></div><div class="setting-inline-actions"><button class="button" id="openNotificationSettings" type="button">打开系统设置</button><button class="button primary" id="requestNotificationPermission" type="button">开启通知</button></div></div><div class="setting-row"><div><strong>默认提醒音</strong><span>各类提醒可跟随、单独选择或静音</span></div><div class="setting-inline-actions"><select id="globalNotificationSound"><option>Glass</option><option>Ping</option><option>Pop</option><option>Submarine</option><option>Tink</option><option value="silent">关闭声音</option></select><button class="button" id="previewNotificationSound" type="button">试听</button></div></div><div id="notificationCategorySettings"></div><div class="setting-heading subsection-heading"><h3>每日复盘提醒</h3><p>默认22:30，可分别设置星期；通知支持打开复盘、15分钟后提醒和今日跳过。</p></div><div id="reviewWeekdaySettings" class="notification-weekdays"></div><div class="settings-save-row"><span id="notificationSaveStatus" class="muted-note">更改后点击保存</span><button class="button primary" id="saveNotificationSettings" type="button">保存声音和通知</button></div></div>`;
+      setSafeMarkup(panel, `<div id="notificationSettingsRoot"><div class="setting-heading"><h2>声音和通知</h2><p>首次开启提醒时再请求 macOS 权限；锁屏仅显示中性文案。</p></div><div class="setting-row"><div><strong>系统通知权限</strong><span id="notificationPermissionStatus">尚未检查</span></div><div class="setting-inline-actions"><button class="button" id="openNotificationSettings" type="button">打开系统设置</button><button class="button primary" id="requestNotificationPermission" type="button">开启通知</button></div></div><div class="setting-row"><div><strong>默认提醒音</strong><span>各类提醒可跟随、单独选择或静音</span></div><div class="setting-inline-actions"><select id="globalNotificationSound"><option>Glass</option><option>Ping</option><option>Pop</option><option>Submarine</option><option>Tink</option><option value="silent">关闭声音</option></select><button class="button" id="previewNotificationSound" type="button">试听</button></div></div><div id="notificationCategorySettings"></div><div class="setting-heading subsection-heading"><h3>每日复盘提醒</h3><p>默认22:30，可分别设置星期；通知支持打开复盘、15分钟后提醒和今日跳过。</p></div><div id="reviewWeekdaySettings" class="notification-weekdays"></div><div class="settings-save-row"><span id="notificationSaveStatus" class="muted-note">更改后点击保存</span><button class="button primary" id="saveNotificationSettings" type="button">保存声音和通知</button></div></div>`);
       const categories = [['review','每日复盘'],['tasks','任务截止'],['words','单词复习'],['exams','考试训练'],['hydration','饮水'],['health','健康记录'],['recommendations','资讯与论文更新']];
-      el('#notificationCategorySettings').innerHTML = categories.map(([key,label]) => `<div class="setting-row"><div><strong>${label}</strong><span>可单独静音或选择声音</span></div><div class="setting-inline-actions"><input type="checkbox" role="switch" data-notification-enabled="${key}"><select data-notification-sound="${key}"><option value="global">跟随默认</option><option>Glass</option><option>Ping</option><option>Pop</option><option>Submarine</option><option>Tink</option><option value="silent">静音</option></select></div></div>`).join('');
+      setSafeMarkup(el('#notificationCategorySettings'), categories.map(([key,label]) => `<div class="setting-row"><div><strong>${escapeHtml(label)}</strong><span>可单独静音或选择声音</span></div><div class="setting-inline-actions"><input type="checkbox" role="switch" data-notification-enabled="${escapeHtml(key)}"><select data-notification-sound="${escapeHtml(key)}"><option value="global">跟随默认</option><option>Glass</option><option>Ping</option><option>Pop</option><option>Submarine</option><option>Tink</option><option value="silent">静音</option></select></div></div>`).join(''));
       el('#notificationCategorySettings').insertAdjacentHTML('afterend', '<div class="setting-heading subsection-heading"><h3>CET-6 训练</h3><p>训练计时提示与电脑休眠行为。</p></div><div class="setting-row"><div><strong>训练提示音</strong><span>计时结束、模块切换和提前5分钟提醒</span></div><div class="setting-inline-actions"><button class="button" id="testCet6SoundButton" type="button">测试提示音</button><input id="cet6SoundSetting" type="checkbox" checked role="switch"></div></div><div class="setting-row"><div><strong>电脑休眠</strong><span>使用工作台音频时始终暂停</span></div><select id="cet6SleepSetting"><option value="pause">暂停计时</option><option value="continue">外部音频或无音频时继续计时</option></select></div>');
-      el('#reviewWeekdaySettings').innerHTML = ['周日','周一','周二','周三','周四','周五','周六'].map((label,day) => `<label>${label}<input type="time" data-review-reminder-day="${day}" value="22:30"></label>`).join('');
+      setSafeMarkup(el('#reviewWeekdaySettings'), ['周日','周一','周二','周三','周四','周五','周六'].map((label,day) => `<label>${label}<input type="time" data-review-reminder-day="${day}" value="22:30"></label>`).join(''));
       el('#requestNotificationPermission').addEventListener('click', requestNotificationPermission); el('#openNotificationSettings').addEventListener('click', () => callNative('openNotificationSystemSettings').catch(() => showToast('请在系统设置中打开通知权限')));
       el('#previewNotificationSound').addEventListener('click', () => callNative('previewNotificationSound', { sound: el('#globalNotificationSound').value }).catch(() => showToast('当前环境无法试听系统声音')));
       el('#saveNotificationSettings').addEventListener('click', saveNotificationSettings);
@@ -2044,7 +2043,7 @@
       await callNative('deleteYoudaoCredentials');
       latestYoudaoResult = null;
       setYoudaoStatus(false, '有道凭据已从钥匙串删除');
-      el('#youdaoLookupResult').innerHTML = '<span>有道凭据已删除。</span>';
+      setSafeMarkup(el('#youdaoLookupResult'), '<span>有道凭据已删除。</span>');
       showToast('有道凭据已删除');
     } catch (_) { showToast('无法删除有道凭据'); }
   }
@@ -2085,7 +2084,7 @@
       const definitions = Array.isArray(group.definitions) ? group.definitions.map(item => `<li><span>${escapeHtml(item.definition || '')}</span>${item.example ? `<small>${escapeHtml(item.example)}</small>` : ''}</li>`).join('') : '';
       return definitions ? `<section class="youdao-pos-group"><b>${escapeHtml(posLabels[group.partOfSpeech] || group.partOfSpeech || '释义')}</b><ol>${definitions}</ol></section>` : '';
     }).join('') : '';
-    el('#youdaoLookupResult').innerHTML = `<article class="youdao-entry"><header><div><strong>${escapeHtml(result.query || '')}</strong>${phonetics}</div><button class="icon-button youdao-speak" id="speakYoudaoButton" type="button" title="播放发音" aria-label="播放 ${escapeHtml(result.query || '')} 的发音">🔊︎</button></header><div class="youdao-entry-divider"></div><section class="youdao-cn-meaning"><b>中文参考</b><ol class="youdao-meanings">${meaningRows}</ol></section>${dictionarySections ? `<div class="youdao-entry-divider"></div><div class="youdao-dictionary-sections">${dictionarySections}</div><p class="youdao-source-note">音标、音频与英文释义：Free Dictionary API；中文参考：有道文本翻译</p>` : ''}<footer class="youdao-result-actions"><button class="button primary" id="addYoudaoWordButton" type="button">加入今日词表</button><button class="button" id="openYoudaoEntryButton" type="button">在有道词典打开</button></footer></article>`;
+    setSafeMarkup(el('#youdaoLookupResult'), `<article class="youdao-entry"><header><div><strong>${escapeHtml(result.query || '')}</strong>${phonetics}</div><button class="icon-button youdao-speak" id="speakYoudaoButton" type="button" title="播放发音" aria-label="播放 ${escapeHtml(result.query || '')} 的发音">🔊︎</button></header><div class="youdao-entry-divider"></div><section class="youdao-cn-meaning"><b>中文参考</b><ol class="youdao-meanings">${meaningRows}</ol></section>${dictionarySections ? `<div class="youdao-entry-divider"></div><div class="youdao-dictionary-sections">${dictionarySections}</div><p class="youdao-source-note">音标、音频与英文释义：Free Dictionary API；中文参考：有道文本翻译</p>` : ''}<footer class="youdao-result-actions"><button class="button primary" id="addYoudaoWordButton" type="button">加入今日词表</button><button class="button" id="openYoudaoEntryButton" type="button">在有道词典打开</button></footer></article>`);
     document.getElementById('addYoudaoWordButton')?.addEventListener('click', addLatestYoudaoWord);
     document.getElementById('speakYoudaoButton')?.addEventListener('click', playLatestYoudaoWord);
     document.getElementById('openYoudaoEntryButton')?.addEventListener('click', openLatestYoudaoEntry);
@@ -2127,13 +2126,13 @@
     const button = el('#youdaoLookupButton');
     button.disabled = true;
     button.textContent = '查询中…';
-    el('#youdaoLookupResult').innerHTML = '<span>正在请求有道官方 API…</span>';
+    setSafeMarkup(el('#youdaoLookupResult'), '<span>正在请求有道官方 API…</span>');
     try {
       latestYoudaoResult = await callNative('lookupYoudao', { query });
       renderYoudaoResult(latestYoudaoResult);
     } catch (error) {
       const messages = { youdao_credentials_not_found: '请先在“设置 → 英语服务”配置有道凭据。', network_failed: '网络连接失败，请稍后重试。', youdao_api_error: `有道查询失败，错误码：${error.detail || '未知'}` };
-      el('#youdaoLookupResult').innerHTML = `<span>${escapeHtml(messages[error.message] || `查询失败：${error.message}`)}</span>`;
+      setSafeMarkup(el('#youdaoLookupResult'), `<span>${escapeHtml(messages[error.message] || `查询失败：${error.message}`)}</span>`);
     } finally {
       button.disabled = false;
       button.textContent = '查询';
@@ -2256,12 +2255,12 @@
     const preview = session.phase === 'preview';
     const studying = session.phase === 'studying';
     el('#wordMeaningHeading').textContent = preview ? '中文释义' : studying ? '输入中文释义' : '核验结果与标准释义';
-    body.innerHTML = words.length ? words.map(word => {
+    setSafeMarkup(body, words.length ? words.map(word => {
       const result = session.results[word.id];
       const operation = studying ? '' : `<button class="text-button" type="button" data-word-edit="${word.id}">编辑</button>${preview ? `<button class="text-button danger-text" type="button" data-word-delete="${word.id}">删除</button>${wordBatchDeleteMode ? `<input type="checkbox" data-word-batch="${word.id}" aria-label="选择 ${escapeHtml(word.display)}">` : ''}` : result ? `<button class="text-button" type="button" data-word-override="${word.id}">人工改判</button>` : ''}`;
       const meaningCell = preview ? `<div class="preview-meanings">${word.definitions.length ? word.definitions.map(item => `<span>${escapeHtml(item)}</span>`).join('') : '<span class="pending-meaning">待补充释义</span>'}</div>` : studying ? `<input class="meaning-input" data-word-id="${word.id}" value="${escapeHtml(session.answers[word.id] || '')}" placeholder="输入中文释义，可留空">` : wordResultMarkup(word, result);
       return `<tr><td class="word-row-actions">${operation}</td><td><strong>${escapeHtml(word.display)}</strong></td><td>${meaningCell}</td><td><span class="status-tag">${escapeHtml(wordSourceLabel(word))}</span></td><td>${result ? `<span class="word-result ${result.result}">${resultLabel(result.result)}</span>` : '—'}</td></tr>`;
-    }).join('') : '<tr><td colspan="5" class="empty-table">今日还没有词项。录入新词后会显示在这里；到期复习词将在新词之后出现。</td></tr>';
+    }).join('') : '<tr><td colspan="5" class="empty-table">今日还没有词项。录入新词后会显示在这里；到期复习词将在新词之后出现。</td></tr>');
     el('#wordPrimaryAction').textContent = preview ? '开始学习' : studying ? '提交并检验' : '今日学习已完成';
     el('#wordPrimaryAction').disabled = !words.length || session.phase === 'submitted';
     el('#clearWordAnswersButton').hidden = !studying;
@@ -2447,7 +2446,7 @@
     const words = session.retryIds.map(id => state.words.find(word => word.id === id)).filter(Boolean);
     panel.hidden = session.phase !== 'submitted' || !words.length;
     el('#wordRetryStatus').textContent = `${words.length} 个待复习`;
-    el('#wordRetryBody').innerHTML = words.map(word => `<tr><td><strong>${escapeHtml(word.display)}</strong></td><td><input data-retry-word="${word.id}" value="${escapeHtml(session.retryAnswers[word.id] || '')}" placeholder="输入任意一个正确释义，可留空"></td><td>${resultLabel(session.retryAttempts[word.id]?.result)}</td></tr>`).join('');
+    setSafeMarkup(el('#wordRetryBody'), words.map(word => `<tr><td><strong>${escapeHtml(word.display)}</strong></td><td><input data-retry-word="${escapeHtml(word.id)}" value="${escapeHtml(session.retryAnswers[word.id] || '')}" placeholder="输入任意一个正确释义，可留空"></td><td>${escapeHtml(resultLabel(session.retryAttempts[word.id]?.result))}</td></tr>`).join(''));
     all('[data-retry-word]').forEach(input => input.addEventListener('input', event => { session.retryAnswers[event.target.dataset.retryWord] = event.target.value; saveState(); }));
   }
 
@@ -2469,7 +2468,7 @@
     const query = (el('#wordManagerSearch')?.value || '').trim().toLowerCase();
     const words = state.words.filter(word => word.status !== 'trash' && (wordManagerMode !== 'mastered' || word.status === 'mastered')).filter(word => `${word.display} ${word.definitions.join(' ')}`.toLowerCase().includes(query));
     el('#wordManagerTitle').textContent = wordManagerMode === 'mastered' ? '熟练掌握词库' : '本地词库';
-    el('#wordManagerList').innerHTML = words.length ? words.map(word => `<article class="word-manager-row"><div><strong>${escapeHtml(word.display)}</strong><span>${escapeHtml(word.definitions.join('；') || '待补充')} · 首次录入 ${word.sourceDate}</span><small>${word.status === 'mastered' ? '熟练掌握' : `复习周期起点 ${word.cycleStartDay}`}</small></div><div><button class="button" type="button" data-manager-edit="${word.id}">编辑</button>${word.status === 'mastered' ? `<button class="button" type="button" data-word-relearn="${word.id}">重新学习</button>` : ''}<button class="button" type="button" data-manager-delete="${word.id}">删除</button></div></article>`).join('') : '<div class="empty-state"><strong>没有匹配词项</strong></div>';
+    setSafeMarkup(el('#wordManagerList'), words.length ? words.map(word => `<article class="word-manager-row"><div><strong>${escapeHtml(word.display)}</strong><span>${escapeHtml(word.definitions.join('；') || '待补充')} · 首次录入 ${escapeHtml(word.sourceDate)}</span><small>${word.status === 'mastered' ? '熟练掌握' : `复习周期起点 ${escapeHtml(word.cycleStartDay)}`}</small></div><div><button class="button" type="button" data-manager-edit="${escapeHtml(word.id)}">编辑</button>${word.status === 'mastered' ? `<button class="button" type="button" data-word-relearn="${escapeHtml(word.id)}">重新学习</button>` : ''}<button class="button" type="button" data-manager-delete="${escapeHtml(word.id)}">删除</button></div></article>`).join('') : '<div class="empty-state"><strong>没有匹配词项</strong></div>');
     all('[data-manager-edit]').forEach(button => button.addEventListener('click', () => openWordEditor(Number(button.dataset.managerEdit))));
     all('[data-manager-delete]').forEach(button => button.addEventListener('click', () => trashWord(Number(button.dataset.managerDelete))));
     all('[data-word-relearn]').forEach(button => button.addEventListener('click', () => relearnWord(Number(button.dataset.wordRelearn))));
@@ -2491,7 +2490,7 @@
     const cutoff = Date.now() - 30 * 86400000;
     const retained = state.wordTrash.filter(item => new Date(item.deletedAt).getTime() > cutoff);
     if (retained.length !== state.wordTrash.length) { state.wordTrash = retained; saveState(); }
-    el('#wordTrashList').innerHTML = state.wordTrash.length ? state.wordTrash.map(item => `<article class="word-manager-row"><div><strong>${escapeHtml(item.display)}</strong><span>${escapeHtml((item.definitions || []).join('；'))}</span><small>剩余 ${Math.max(0, Math.ceil((new Date(item.deletedAt).getTime() + 30 * 86400000 - Date.now()) / 86400000))} 天</small></div><div><button class="button" type="button" data-word-restore="${item.id}">恢复</button><button class="button" type="button" data-word-purge="${item.id}">永久删除</button></div></article>`).join('') : '<div class="empty-state"><strong>词汇回收站为空</strong></div>';
+    setSafeMarkup(el('#wordTrashList'), state.wordTrash.length ? state.wordTrash.map(item => `<article class="word-manager-row"><div><strong>${escapeHtml(item.display)}</strong><span>${escapeHtml((item.definitions || []).join('；'))}</span><small>剩余 ${Math.max(0, Math.ceil((new Date(item.deletedAt).getTime() + 30 * 86400000 - Date.now()) / 86400000))} 天</small></div><div><button class="button" type="button" data-word-restore="${escapeHtml(item.id)}">恢复</button><button class="button" type="button" data-word-purge="${escapeHtml(item.id)}">永久删除</button></div></article>`).join('') : '<div class="empty-state"><strong>词汇回收站为空</strong></div>');
     all('[data-word-restore]').forEach(button => button.addEventListener('click', () => restoreWord(Number(button.dataset.wordRestore))));
     all('[data-word-purge]').forEach(button => button.addEventListener('click', () => { if (window.confirm('永久删除该词？此操作无法撤销。')) { state.wordTrash = state.wordTrash.filter(item => item.id !== Number(button.dataset.wordPurge)); saveState(); renderWordTrash(); renderWords(); } }));
   }
@@ -2518,11 +2517,11 @@
   function renderWordCheckpoint() {
     const checkpoint = ensureWordSession().checkpoint;
     if (!checkpoint) return;
-    el('#wordCheckpointList').innerHTML = checkpoint.keepIds.map(id => {
+    setSafeMarkup(el('#wordCheckpointList'), checkpoint.keepIds.map(id => {
       const word = state.words.find(item => item.id === id), result = state.wordLearning.results[id];
       return word ? `<article class="word-manager-row"><div><strong>${escapeHtml(word.display)}</strong><span>${escapeHtml(word.definitions.join('；'))}</span><small>首次录入 ${word.sourceDate} · 第30天结果 ${resultLabel(result?.result)} · 默认进入下一轮</small></div><button class="button" type="button" data-checkpoint-remove="${id}">删除</button></article>` : '';
-    }).join('');
-    el('#wordCheckpointTrash').innerHTML = checkpoint.trashIds.map(id => { const word = state.words.find(item => item.id === id); return word ? `<article class="word-manager-row"><strong>${escapeHtml(word.display)}</strong><button class="button" type="button" data-checkpoint-restore="${id}">恢复</button></article>` : ''; }).join('') || '<p class="muted-note">本页回收站为空</p>';
+    }).join(''));
+    setSafeMarkup(el('#wordCheckpointTrash'), checkpoint.trashIds.map(id => { const word = state.words.find(item => item.id === id); return word ? `<article class="word-manager-row"><strong>${escapeHtml(word.display)}</strong><button class="button" type="button" data-checkpoint-restore="${escapeHtml(id)}">恢复</button></article>` : ''; }).join('') || '<p class="muted-note">本页回收站为空</p>');
     el('#checkpointTrashCount').textContent = checkpoint.trashIds.length;
     all('[data-checkpoint-remove]').forEach(button => button.addEventListener('click', () => { const id = Number(button.dataset.checkpointRemove); checkpoint.keepIds = checkpoint.keepIds.filter(item => item !== id); checkpoint.trashIds.push(id); saveState(); renderWordCheckpoint(); renderWords(); }));
     all('[data-checkpoint-restore]').forEach(button => button.addEventListener('click', () => { const id = Number(button.dataset.checkpointRestore); checkpoint.trashIds = checkpoint.trashIds.filter(item => item !== id); checkpoint.keepIds.push(id); saveState(); renderWordCheckpoint(); renderWords(); }));
@@ -2647,12 +2646,12 @@
     const predictedDays = new Set(prediction.ready ? WorkbenchHealthCore.range(prediction.earliestStart, prediction.latestEnd) : []);
     const grid = WorkbenchHealthCore.monthMatrix(year, month);
     el('#cycleCalendarTitle').textContent = `${year}年${monthNumber}月`;
-    el('#cycleCalendarGrid').innerHTML = grid.map(day => {
+    setSafeMarkup(el('#cycleCalendarGrid'), grid.map(day => {
       const period = cyclePeriodForDay(day.key);
       const classes = ['cycle-day', day.currentMonth ? '' : 'outside', period ? 'recorded' : predictedDays.has(day.key) ? 'predicted' : '', period && day.key === period.start ? 'range-start' : '', period && day.key === period.end ? 'range-end' : ''].filter(Boolean).join(' ');
       const label = period ? '已记录周期' : predictedDays.has(day.key) ? '预测区间' : '无记录';
       return `<button class="${classes}" type="button" data-cycle-day="${day.key}" aria-label="${day.key}，${label}"><span>${day.day}</span>${period ? '<i>记录</i>' : predictedDays.has(day.key) ? '<i>预测</i>' : ''}</button>`;
-    }).join('');
+    }).join(''));
     all('[data-cycle-day]', el('#cycleCalendarGrid')).forEach(button => button.addEventListener('click', () => openCyclePeriodDialog(cyclePeriodForDay(button.dataset.cycleDay), button.dataset.cycleDay)));
     const status = el('#cyclePredictionStatus');
     if (prediction.ready) {
@@ -2665,10 +2664,10 @@
       el('#cyclePredictionCopy').textContent = `已记录 ${prediction.completeCount || 0} 个完整周期；至少需要3个未排除的完整周期才显示预测区间。`;
     }
     const stats = WorkbenchHealthCore.statistics(state.cyclePeriods);
-    el('#cycleStatistics').innerHTML = `<span>完整记录 <b>${stats.count}</b></span><span>平均周期 <b>${stats.averageCycle ?? '—'} 天</b></span><span>平均持续 <b>${stats.averageDuration ?? '—'} 天</b></span><span>波动范围 <b>${stats.variation ?? '—'} 天</b></span>`;
+    setSafeMarkup(el('#cycleStatistics'), `<span>完整记录 <b>${Number(stats.count) || 0}</b></span><span>平均周期 <b>${Number(stats.averageCycle) || '—'} 天</b></span><span>平均持续 <b>${Number(stats.averageDuration) || '—'} 天</b></span><span>波动范围 <b>${Number(stats.variation) || '—'} 天</b></span>`);
     const history = el('#cycleHistoryList');
-    history.innerHTML = [...state.cyclePeriods].reverse().map(period => `<article><div><strong>${period.start} 至 ${period.end}</strong><span>${period.excludeFromPrediction ? '异常记录，不参与预测' : `流量 ${period.flow || '未记录'} · 疼痛 ${period.pain || '未记录'}`}</span></div><button class="button" type="button" data-cycle-edit="${period.id}">编辑</button></article>`).join('') + state.cyclePeriodTrash.map(period => `<article class="trashed"><div><strong>${period.start} 至 ${period.end}</strong><span>已删除 · 30天内可恢复</span></div><button class="button" type="button" data-cycle-restore="${period.id}">恢复</button></article>`).join('');
-    if (!history.innerHTML) history.innerHTML = '<div class="empty-state"><strong>尚无周期记录</strong><span>点击月历日期或“新增周期记录”开始。</span></div>';
+    const historyMarkup = [...state.cyclePeriods].reverse().map(period => `<article><div><strong>${escapeHtml(period.start)} 至 ${escapeHtml(period.end)}</strong><span>${period.excludeFromPrediction ? '异常记录，不参与预测' : `流量 ${escapeHtml(period.flow || '未记录')} · 疼痛 ${escapeHtml(period.pain || '未记录')}`}</span></div><button class="button" type="button" data-cycle-edit="${escapeHtml(period.id)}">编辑</button></article>`).join('') + state.cyclePeriodTrash.map(period => `<article class="trashed"><div><strong>${escapeHtml(period.start)} 至 ${escapeHtml(period.end)}</strong><span>已删除 · 30天内可恢复</span></div><button class="button" type="button" data-cycle-restore="${escapeHtml(period.id)}">恢复</button></article>`).join('');
+    setSafeMarkup(history, historyMarkup || '<div class="empty-state"><strong>尚无周期记录</strong><span>点击月历日期或“新增周期记录”开始。</span></div>');
     all('[data-cycle-edit]', history).forEach(button => button.addEventListener('click', () => openCyclePeriodDialog(state.cyclePeriods.find(period => String(period.id) === button.dataset.cycleEdit))));
     all('[data-cycle-restore]', history).forEach(button => button.addEventListener('click', () => restoreCyclePeriod(button.dataset.cycleRestore)));
   }
@@ -2685,7 +2684,7 @@
       { title: `饮水 ${state.water} ml`, meta: '今日累计 · 白水及其他饮品' },
       ...state.exercises.slice().reverse().slice(0, 5).map(item => ({ title: `${item.type} ${item.duration} 分钟`, meta: new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(item.date)) }))
     ];
-    el('#healthTimeline').innerHTML = items.map(item => `<div><span></span><p><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.meta)}</small></p></div>`).join('');
+    setSafeMarkup(el('#healthTimeline'), items.map(item => `<div><span></span><p><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.meta)}</small></p></div>`).join(''));
     if (cycleEnabled) renderCycleCalendar();
   }
 
@@ -2719,7 +2718,7 @@
     el('#reviewWaterSummary').textContent = `${state.water} ml`;
     el('#reviewExerciseSummary').textContent = `${state.exercises.filter(item => (item.date || '').slice(0, 10) === activeReviewDate).reduce((sum, item) => sum + Number(item.duration || 0), 0)} 分钟`;
     const ratingNames = [['energy','精力'], ['stress','压力'], ['satisfaction','满意度'], ['focus','专注度'], ['physical','身体状态']];
-    el('#ratingGrid').innerHTML = ratingNames.map(([key, name]) => `<fieldset><legend>${name}</legend><div class="rating-options">${[1,2,3,4,5].map(value => `<label><input type="radio" name="rating-${key}" value="${value}" ${Number(record.draft.ratings[key]) === value ? 'checked' : ''}><span>${value}</span></label>`).join('')}</div></fieldset>`).join('');
+    setSafeMarkup(el('#ratingGrid'), ratingNames.map(([key, name]) => `<fieldset><legend>${escapeHtml(name)}</legend><div class="rating-options">${[1,2,3,4,5].map(value => `<label><input type="radio" name="rating-${escapeHtml(key)}" value="${value}" ${Number(record.draft.ratings[key]) === value ? 'checked' : ''}><span>${value}</span></label>`).join('')}</div></fieldset>`).join(''));
     WorkbenchReviewCore.QUESTIONS.forEach(name => { const input = el(`[name="${name}"]`, el('#reviewForm')); if (input) input.value = record.draft.answers[name] || ''; });
     el('#reviewHeadline').textContent = record.headline; el('#reviewDate').value = activeReviewDate; el('#reviewDate').max = WorkbenchReviewCore.localDateKey();
     el('#reviewMonthEnd').hidden = !WorkbenchReviewCore.isMonthEnd(activeReviewDate); el('#reviewEntryState').hidden = Boolean(current); el('#reviewResultState').hidden = !current;
@@ -2750,14 +2749,14 @@
     el('#reviewEncouragement').textContent = doneTasks.length ? `今天完成了 ${doneTasks.length} 项任务，你的推进已有清晰证据。` : '你认真记录了今天，也为明天确定了第一步。';
     el('#reviewEncouragementBasis').textContent = `依据 ${state.tasks.length} 项任务、${state.words.length} 个词汇记录和本次复盘生成。`;
     const key = state.tasks.filter(task => task.key).slice(0, 3); const minutes = doneTasks.reduce((sum, task) => sum + Number(task.estimate || 0), 0);
-    el('#reviewVisualSummary').innerHTML = `<div class="review-ring" style="--progress:${rate * 3.6}deg"><b>${rate}%</b><span>任务完成率</span></div><div class="review-chart"><b>关键任务</b>${key.length ? key.map(task => `<div><span>${escapeHtml(task.title)}</span><i class="${task.done ? 'done' : ''}">${task.done ? '已完成' : '未完成'}</i></div>`).join('') : '<p>今日没有关键任务</p>'}</div><div class="review-chart"><b>投入时间</b><div class="review-bar"><i style="width:${Math.min(100, minutes / 3)}%"></i></div><span>已完成任务估算 ${minutes} 分钟</span></div>`;
+    setSafeMarkup(el('#reviewVisualSummary'), `<div class="review-ring" style="--progress:${Number(rate) * 3.6}deg"><b>${Number(rate)}%</b><span>任务完成率</span></div><div class="review-chart"><b>关键任务</b>${key.length ? key.map(task => `<div><span>${escapeHtml(task.title)}</span><i class="${task.done ? 'done' : ''}">${task.done ? '已完成' : '未完成'}</i></div>`).join('') : '<p>今日没有关键任务</p>'}</div><div class="review-chart"><b>投入时间</b><div class="review-bar"><i style="width:${Math.min(100, Number(minutes) / 3)}%"></i></div><span>已完成任务估算 ${Number(minutes)} 分钟</span></div>`);
     const libraryToday = state.library.filter(item => (item.createdAt || '').slice(0, 10) === activeReviewDate);
-    el('#reviewEvidenceGallery').innerHTML = libraryToday.length ? libraryToday.slice(0, 6).map(item => `<button class="review-evidence" type="button" ${item.path ? `data-library-open="${escapeHtml(item.path)}"` : ''}><b>${escapeHtml(item.title || item.name || '成果文件')}</b><span>${escapeHtml(item.type || '本地资料')}</span></button>`).join('') : '<div class="empty-state compact-empty"><strong>今日暂无成果附件</strong><span>从任务、论文项目或资料库关联文件后将在这里直接展示。</span></div>';
+    setSafeMarkup(el('#reviewEvidenceGallery'), libraryToday.length ? libraryToday.slice(0, 6).map(item => `<button class="review-evidence" type="button" ${item.path ? `data-library-open="${escapeHtml(item.path)}"` : ''}><b>${escapeHtml(item.title || item.name || '成果文件')}</b><span>${escapeHtml(item.type || '本地资料')}</span></button>`).join('') : '<div class="empty-state compact-empty"><strong>今日暂无成果附件</strong><span>从任务、论文项目或资料库关联文件后将在这里直接展示。</span></div>');
     const coreLabels = [['completed','今天完成了什么'], ['obstacle','最大的阻碍'], ['tomorrow','明天最重要的一件事']];
-    el('#reviewAnswerSnapshot').innerHTML = coreLabels.map(([keyName,label]) => `<article><span>${label}</span><p>${escapeHtml(version.answers[keyName] || '未填写')}</p></article>`).join('') + `<div class="review-rating-snapshot">${[['energy','精力'],['stress','压力'],['satisfaction','满意度'],['focus','专注度'],['physical','身体状态']].map(([keyName,label]) => `<span>${label}<b>${version.ratings[keyName]}</b></span>`).join('')}</div>`;
-    el('#reviewFurtherSnapshot').innerHTML = WorkbenchReviewCore.QUESTIONS.filter(keyName => !['completed','obstacle','tomorrow'].includes(keyName)).map(keyName => version.answers[keyName] ? `<p>${escapeHtml(version.answers[keyName])}</p>` : '').join('') || '<p>没有补充内容。</p>';
+    setSafeMarkup(el('#reviewAnswerSnapshot'), coreLabels.map(([keyName,label]) => `<article><span>${escapeHtml(label)}</span><p>${escapeHtml(version.answers[keyName] || '未填写')}</p></article>`).join('') + `<div class="review-rating-snapshot">${[['energy','精力'],['stress','压力'],['satisfaction','满意度'],['focus','专注度'],['physical','身体状态']].map(([keyName,label]) => `<span>${label}<b>${Number(version.ratings[keyName]) || 0}</b></span>`).join('')}</div>`);
+    setSafeMarkup(el('#reviewFurtherSnapshot'), WorkbenchReviewCore.QUESTIONS.filter(keyName => !['completed','obstacle','tomorrow'].includes(keyName)).map(keyName => version.answers[keyName] ? `<p>${escapeHtml(version.answers[keyName])}</p>` : '').join('') || '<p>没有补充内容。</p>');
     const actionId = WorkbenchReviewCore.actionId(version.id, 'task', 0); const written = record.actionWrites[actionId];
-    el('#reviewActionDrafts').innerHTML = `<label class="review-action-draft"><input type="checkbox" data-review-action="${actionId}" ${written ? 'checked disabled' : 'checked'}><span><b>${escapeHtml(version.answers.tomorrow)}</b><small>${written ? '已写入待办' : '来源：明天最重要的一件事'}</small></span></label>`;
+    setSafeMarkup(el('#reviewActionDrafts'), `<label class="review-action-draft"><input type="checkbox" data-review-action="${escapeHtml(actionId)}" ${written ? 'checked disabled' : 'checked'}><span><b>${escapeHtml(version.answers.tomorrow)}</b><small>${written ? '已写入待办' : '来源：明天最重要的一件事'}</small></span></label>`);
   }
 
   function editReviewHeadline() {
@@ -2797,12 +2796,12 @@
 
   async function generateReviewAi() {
     const record = WorkbenchReviewCore.ensureRecord(state.reviews, activeReviewDate); const version = record.versions.find(item => item.id === record.currentVersionId); if (!version) return;
-    const target = el('#reviewAiResult'); target.innerHTML = '<p>正在基于本次复盘和今日聚合事实生成建议…</p>';
+    const target = el('#reviewAiResult'); setSafeMarkup(target, '<p>正在基于本次复盘和今日聚合事实生成建议…</p>');
     try {
       const prompt = `你只负责每日复盘建议。基于给定事实，输出简短鼓励、一个明日优先建议和依据，不诊断、不虚构。\n${JSON.stringify({ date: activeReviewDate, tasks: state.tasks.map(task => ({ title: task.title, done: task.done, key: task.key })), review: version })}`;
       const config = assertAiAvailable('review'); const result = await callNative('sendAiChat', { account: config.account, provider: config.provider, baseUrl: config.baseUrl, model: config.model, prompt, context: { feature: '今日复盘', allowedFields: ['任务完成状态', '复盘回答', '主观量表'] }, attachments: [], history: [] });
-      const text = result.reply || result.content || result.message || 'AI 已返回，但内容为空。'; record.aiByVersion[version.id] = { text, createdAt: new Date().toISOString(), model: config.model }; saveState(); target.innerHTML = `<p>${escapeHtml(text)}</p><small>依据：本次复盘、今日任务完成状态与量表</small>`;
-    } catch (error) { target.innerHTML = `<p>AI 建议生成失败：${escapeHtml(error.detail || error.message)}</p><small>复盘已保存在 SQLite，可稍后重试。</small>`; }
+      const text = result.reply || result.content || result.message || 'AI 已返回，但内容为空。'; record.aiByVersion[version.id] = { text, createdAt: new Date().toISOString(), model: config.model }; saveState(); setSafeMarkup(target, `<p>${escapeHtml(text)}</p><small>依据：本次复盘、今日任务完成状态与量表</small>`);
+    } catch (error) { setSafeMarkup(target, `<p>AI 建议生成失败：${escapeHtml(error.detail || error.message)}</p><small>复盘已保存在 SQLite，可稍后重试。</small>`); }
   }
 
   function exportCurrentReview() {
@@ -2871,18 +2870,18 @@
   function renderCalendarSettings() {
     el('#timetableEnabledSetting').checked = Boolean(state.settings.timetableEnabled);
     const list = el('#calendarPeriodList');
-    list.innerHTML = '';
+    list.replaceChildren();
     state.settings.calendarPeriods.forEach(period => addCalendarPeriodRow(period));
-    if (!state.settings.calendarPeriods.length) list.innerHTML = '<p class="calendar-period-empty">尚未设置工作时间段</p>';
+    if (!state.settings.calendarPeriods.length) setSafeMarkup(list, '<p class="calendar-period-empty">尚未设置工作时间段</p>');
     setCalendarPeriodsEditing(false);
     const timetable = state.settings.timetable;
     el('#semesterNameSetting').value = timetable.semesterName || '';
     el('#semesterWeeksSetting').value = timetable.semesterWeeks || 20;
     el('#semesterStartSetting').value = timetable.semesterStart || '';
     const coursePeriodList = el('#coursePeriodList');
-    coursePeriodList.innerHTML = '';
+    coursePeriodList.replaceChildren();
     timetable.coursePeriods.forEach(period => addCoursePeriodRow(period));
-    if (!timetable.coursePeriods.length) coursePeriodList.innerHTML = '<p class="calendar-period-empty">尚未设置课程节次</p>';
+    if (!timetable.coursePeriods.length) setSafeMarkup(coursePeriodList, '<p class="calendar-period-empty">尚未设置课程节次</p>');
     renderCourseSettingsList();
     updateTimetableVisibility();
   }
@@ -2908,7 +2907,7 @@
     const row = document.createElement('div');
     row.className = 'calendar-period-row';
     row.dataset.periodId = period.id || `period-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    row.innerHTML = `<select data-period-group aria-label="时间段分组"><option value="上午" ${period.group === '下午' ? '' : 'selected'}>上午</option><option value="下午" ${period.group === '下午' ? 'selected' : ''}>下午</option></select><input data-period-name maxlength="40" value="${escapeHtml(period.name || '')}" placeholder="自定义名称" aria-label="时间段名称"><input data-period-start type="time" value="${escapeHtml(period.start || '')}" aria-label="开始时间"><span>至</span><input data-period-end type="time" value="${escapeHtml(period.end || '')}" aria-label="结束时间"><button class="icon-button" type="button" data-remove-period aria-label="删除时间段">×</button>`;
+    setSafeMarkup(row, `<select data-period-group aria-label="时间段分组"><option value="上午" ${period.group === '下午' ? '' : 'selected'}>上午</option><option value="下午" ${period.group === '下午' ? 'selected' : ''}>下午</option></select><input data-period-name maxlength="40" value="${escapeHtml(period.name || '')}" placeholder="自定义名称" aria-label="时间段名称"><input data-period-start type="time" value="${escapeHtml(period.start || '')}" aria-label="开始时间"><span>至</span><input data-period-end type="time" value="${escapeHtml(period.end || '')}" aria-label="结束时间"><button class="icon-button" type="button" data-remove-period aria-label="删除时间段">×</button>`);
     list.appendChild(row);
   }
 
@@ -2918,7 +2917,7 @@
     const row = document.createElement('div');
     row.className = 'calendar-period-row course-period-row';
     row.dataset.coursePeriodId = period.id || `course-period-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    row.innerHTML = `<select data-course-period-group aria-label="课程节次分组"><option value="上午" ${period.group === '下午' ? '' : 'selected'}>上午</option><option value="下午" ${period.group === '下午' ? 'selected' : ''}>下午</option></select><input data-course-period-name maxlength="40" value="${escapeHtml(period.name || '')}" placeholder="第一节" aria-label="节次名称"><input data-course-period-start type="time" value="${escapeHtml(period.start || '')}" aria-label="开始时间"><span>至</span><input data-course-period-end type="time" value="${escapeHtml(period.end || '')}" aria-label="结束时间"><button class="icon-button" type="button" data-remove-course-period aria-label="删除课程节次">×</button>`;
+    setSafeMarkup(row, `<select data-course-period-group aria-label="课程节次分组"><option value="上午" ${period.group === '下午' ? '' : 'selected'}>上午</option><option value="下午" ${period.group === '下午' ? 'selected' : ''}>下午</option></select><input data-course-period-name maxlength="40" value="${escapeHtml(period.name || '')}" placeholder="第一节" aria-label="节次名称"><input data-course-period-start type="time" value="${escapeHtml(period.start || '')}" aria-label="开始时间"><span>至</span><input data-course-period-end type="time" value="${escapeHtml(period.end || '')}" aria-label="结束时间"><button class="icon-button" type="button" data-remove-course-period aria-label="删除课程节次">×</button>`);
     list.appendChild(row);
   }
 
@@ -2961,21 +2960,21 @@
 
   function renderCourseSettingsList() {
     const courses = state.settings.timetable.courses;
-    el('#courseList').innerHTML = courses.length ? courses.map(course => {
+    setSafeMarkup(el('#courseList'), courses.length ? courses.map(course => {
       const periods = state.settings.timetable.coursePeriods;
       const start = periods.find(period => String(period.id) === String(course.startPeriodId));
       const end = periods.find(period => String(period.id) === String(course.endPeriodId));
       const weekLabel = { all: '全部周', odd: '单周', even: '双周', custom: course.customWeeks || '自定义' }[course.weekMode] || '全部周';
       return `<button class="course-setting-row" type="button" data-edit-course="${course.id}"><span class="course-color-dot" style="--course-color:${escapeHtml(course.color || '#6f8f87')}"></span><strong>${escapeHtml(course.name)}</strong><span>周${['日','一','二','三','四','五','六'][Number(course.weekday)]} · ${escapeHtml(start?.name || '未关联')}–${escapeHtml(end?.name || '未关联')}</span><span>${escapeHtml(weekLabel)}${course.location ? ` · ${escapeHtml(course.location)}` : ''}</span></button>`;
-    }).join('') : '<p class="calendar-period-empty">尚未增加课程</p>';
+    }).join('') : '<p class="calendar-period-empty">尚未增加课程</p>');
   }
 
   function openCourseDialog(course = null, preset = {}) {
     const periods = currentCoursePeriodsFromForm();
     if (!periods.length) { showToast('请先增加并填写课程时间段'); return; }
     const options = periods.map((period, index) => `<option value="${period.id}">${escapeHtml(period.name || `第${index + 1}节`)}</option>`).join('');
-    el('#courseStartPeriod').innerHTML = options;
-    el('#courseEndPeriod').innerHTML = options;
+    setSafeMarkup(el('#courseStartPeriod'), options);
+    setSafeMarkup(el('#courseEndPeriod'), options);
     el('#courseDialogTitle').textContent = course ? '编辑课程' : '增加课程';
     el('#courseId').value = course?.id || '';
     el('#courseName').value = course?.name || '';
@@ -3054,10 +3053,10 @@
     el('#calendarRangeLabel').textContent = currentWeek && currentWeek > 0 ? `第 ${currentWeek} 周 · 周一至周日` : '请先在设置中填写学期与课程时间';
     el('#calendarHead').className = 'calendar-head';
     el('#weekGrid').className = 'week-grid timetable-grid';
-    el('#calendarHead').innerHTML = '<div></div>' + days.map(day => `<div class="${sameDay(day, new Date()) ? 'today' : ''}"><strong>${['一','二','三','四','五','六','日'][dayIndex(day)]}</strong><span>${day.getMonth() + 1}/${day.getDate()}</span></div>`).join('');
+    setSafeMarkup(el('#calendarHead'), '<div></div>' + days.map(day => `<div class="${sameDay(day, new Date()) ? 'today' : ''}"><strong>${['一','二','三','四','五','六','日'][dayIndex(day)]}</strong><span>${day.getMonth() + 1}/${day.getDate()}</span></div>`).join(''));
     const periods = timetable.coursePeriods || [];
     if (!periods.length) {
-      el('#weekGrid').innerHTML = '<div class="timetable-empty">请前往“设置 → 日历”增加课程时间段</div>';
+      setSafeMarkup(el('#weekGrid'), '<div class="timetable-empty">请前往“设置 → 日历”增加课程时间段</div>');
       return;
     }
     el('#weekGrid').style.gridTemplateRows = `repeat(${periods.length}, 76px)`;
@@ -3069,7 +3068,7 @@
       const column = ((Number(course.weekday) + 6) % 7) + 2;
       grid += `<button class="calendar-event course-event" type="button" data-course-id="${course.id}" style="grid-column:${column};grid-row:${startIndex + 1} / span ${endIndex - startIndex + 1};--course-color:${escapeHtml(course.color || '#6f8f87')}"><strong>${escapeHtml(course.name)}</strong>${course.location ? `<small>${escapeHtml(course.location)}</small>` : ''}</button>`;
     });
-    el('#weekGrid').innerHTML = grid;
+    setSafeMarkup(el('#weekGrid'), grid);
   }
 
   function courseRunsInWeek(course, week) {
@@ -3093,7 +3092,7 @@
   function renderWeekCalendar() {
     const monday = startOfWeek(new Date());
     const days = Array.from({ length: 7 }, (_, index) => new Date(monday.getTime() + index * 86400000));
-    el('#calendarHead').innerHTML = '<div></div>' + days.map(day => `<div class="${sameDay(day, new Date()) ? 'today' : ''}"><strong>${['一','二','三','四','五','六','日'][dayIndex(day)]}</strong><span>${day.getMonth() + 1}/${day.getDate()}</span></div>`).join('');
+    setSafeMarkup(el('#calendarHead'), '<div></div>' + days.map(day => `<div class="${sameDay(day, new Date()) ? 'today' : ''}"><strong>${['一','二','三','四','五','六','日'][dayIndex(day)]}</strong><span>${day.getMonth() + 1}/${day.getDate()}</span></div>`).join(''));
     let grid = '';
     for (let row = 0; row < 8; row += 1) {
       const hour = 8 + row * 2;
@@ -3107,7 +3106,7 @@
       const row = Math.max(1, Math.min(8, Math.floor((hour - 8) / 2) + 1));
       grid += `<button class="calendar-event" type="button" data-calendar-item-id="${item.id}" style="grid-column:${column};grid-row:${row}"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.start)}–${escapeHtml(item.end)}</span>${item.location ? `<small>${escapeHtml(item.location)}</small>` : ''}</button>`;
     });
-    el('#weekGrid').innerHTML = grid;
+    setSafeMarkup(el('#weekGrid'), grid);
   }
 
   function renderMonthCalendar() {
@@ -3115,14 +3114,14 @@
     const first = new Date(today.getFullYear(), today.getMonth(), 1);
     const start = startOfWeek(first);
     const days = Array.from({ length: 42 }, (_, index) => new Date(start.getTime() + index * 86400000));
-    el('#calendarHead').innerHTML = ['一', '二', '三', '四', '五', '六', '日'].map(day => `<div><strong>周${day}</strong></div>`).join('');
-    el('#weekGrid').innerHTML = days.map(day => {
+    setSafeMarkup(el('#calendarHead'), ['一', '二', '三', '四', '五', '六', '日'].map(day => `<div><strong>周${day}</strong></div>`).join(''));
+    setSafeMarkup(el('#weekGrid'), days.map(day => {
       const key = dateKey(day);
       const items = state.calendarItems.filter(item => item.date === key);
       const summaries = items.slice(0, 3).map(item => `<button type="button" data-calendar-item-id="${item.id}">${escapeHtml(item.start)} ${escapeHtml(item.title)}</button>`).join('');
       const more = items.length > 3 ? `<span>另有 ${items.length - 3} 项</span>` : '';
       return `<article class="month-day ${day.getMonth() === today.getMonth() ? '' : 'outside'} ${sameDay(day, today) ? 'today' : ''}"><button class="month-day-add" type="button" data-calendar-date="${key}" aria-label="增加 ${key} 的工作项">${day.getDate()}</button><div>${summaries}${more}</div></article>`;
-    }).join('');
+    }).join(''));
   }
 
   function dateKey(date) {
@@ -3189,7 +3188,7 @@
       ,...paperRecommendations.map(item => ({ title: item.title, meta: `论文推荐 · ${item.topic}` }))
     ];
     const results = normalized ? corpus.filter(item => `${item.title} ${item.meta}`.toLowerCase().includes(normalized)).slice(0, 10) : corpus.slice(0, 5);
-    el('#searchResults').innerHTML = results.length ? results.map(item => `<div class="search-result"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.meta)}</span></div>`).join('') : '<p class="muted-note">没有找到匹配内容</p>';
+    setSafeMarkup(el('#searchResults'), results.length ? results.map(item => `<div class="search-result"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.meta)}</span></div>`).join('') : '<p class="muted-note">没有找到匹配内容</p>');
   }
 
   function showToast(message) {
@@ -3204,11 +3203,25 @@
     return String(value).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
   }
 
+  function setSafeMarkup(target, markup) {
+    if (!target) return;
+    if (!window.DOMPurify) throw new Error('DOM sanitizer is unavailable');
+    const fragment = window.DOMPurify.sanitize(String(markup || ''), {
+      RETURN_DOM_FRAGMENT: true,
+      USE_PROFILES: { html: true },
+      FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'link', 'meta', 'base'],
+      FORBID_ATTR: ['srcdoc'],
+      SANITIZE_DOM: true,
+      ALLOW_DATA_ATTR: true
+    });
+    target.replaceChildren(fragment);
+  }
+
   function renderAiChat() {
     const target = el('#aiChatMessages');
     if (!target) return;
     const intro = '<div class="ai-message assistant"><b>成长规划 AI 助手</b><p>提交今日复盘后，可以让我结合今日任务、学习和健康汇总给出建议。月末还可以生成月总结与下月计划草案。</p></div>';
-    target.innerHTML = intro + state.aiChats.slice(-20).map(message => `<div class="ai-message ${message.role}"><b>${message.role === 'user' ? '你' : '成长规划 AI 助手'}</b><p>${escapeHtml(message.content)}</p></div>`).join('');
+    setSafeMarkup(target, intro + state.aiChats.slice(-20).map(message => `<div class="ai-message ${message.role === 'user' ? 'user' : 'assistant'}"><b>${message.role === 'user' ? '你' : '成长规划 AI 助手'}</b><p>${escapeHtml(message.content)}</p></div>`).join(''));
     target.scrollTop = target.scrollHeight;
   }
 
@@ -3225,8 +3238,8 @@
     const selector = el('#aiChatModel');
     if (!switcher || !selector) return;
     switcher.style.setProperty('--ai-mode-count', modes.length);
-    switcher.innerHTML = modes.map(mode => `<button class="${mode.id === state.aiMode ? 'active' : ''}" type="button" data-ai-mode="${escapeHtml(mode.id)}"><b>${escapeHtml(mode.label)}</b><span>${escapeHtml(mode.detail)}</span></button>`).join('');
-    selector.innerHTML = modes.map(mode => `<option value="${escapeHtml(mode.id)}" ${mode.id === state.aiMode ? 'selected' : ''}>${escapeHtml(mode.label)}</option>`).join('');
+    setSafeMarkup(switcher, modes.map(mode => `<button class="${mode.id === state.aiMode ? 'active' : ''}" type="button" data-ai-mode="${escapeHtml(mode.id)}"><b>${escapeHtml(mode.label)}</b><span>${escapeHtml(mode.detail)}</span></button>`).join(''));
+    setSafeMarkup(selector, modes.map(mode => `<option value="${escapeHtml(mode.id)}" ${mode.id === state.aiMode ? 'selected' : ''}>${escapeHtml(mode.label)}</option>`).join(''));
     all('[data-ai-mode]', switcher).forEach(button => button.addEventListener('click', () => { state.aiMode = button.dataset.aiMode; saveState(); renderAiModelControls(); }));
   }
 
@@ -3337,11 +3350,11 @@
     el('#deleteCalendarItemButton').addEventListener('click', deleteCalendarItem);
     el('#editCalendarPeriodsButton').addEventListener('click', () => { setCalendarPeriodsEditing(true); el('#calendarSettingsStatus').textContent = '可修改名称与起止时间'; if (!state.settings.calendarPeriods.length) addCalendarPeriodRow(); });
     el('#addCalendarPeriodButton').addEventListener('click', () => { setCalendarPeriodsEditing(true); addCalendarPeriodRow(); });
-    el('#calendarPeriodList').addEventListener('click', event => { const remove = event.target.closest('[data-remove-period]'); if (remove) { remove.closest('.calendar-period-row').remove(); if (!el('.calendar-period-row', el('#calendarPeriodList'))) el('#calendarPeriodList').innerHTML = '<p class="calendar-period-empty">尚未设置工作时间段</p>'; } });
+    el('#calendarPeriodList').addEventListener('click', event => { const remove = event.target.closest('[data-remove-period]'); if (remove) { remove.closest('.calendar-period-row').remove(); if (!el('.calendar-period-row', el('#calendarPeriodList'))) setSafeMarkup(el('#calendarPeriodList'), '<p class="calendar-period-empty">尚未设置工作时间段</p>'); } });
     el('#saveCalendarSettingsButton').addEventListener('click', saveCalendarSettings);
     el('#timetableEnabledSetting').addEventListener('change', event => { state.settings.timetableEnabled = event.target.checked; updateTimetableVisibility(); saveState(); renderCalendar(); el('#calendarSettingsStatus').textContent = '课程表开关已保存'; });
     el('#addCoursePeriodButton').addEventListener('click', () => addCoursePeriodRow());
-    el('#coursePeriodList').addEventListener('click', event => { const remove = event.target.closest('[data-remove-course-period]'); if (remove) { remove.closest('.course-period-row').remove(); if (!el('.course-period-row', el('#coursePeriodList'))) el('#coursePeriodList').innerHTML = '<p class="calendar-period-empty">尚未设置课程节次</p>'; } });
+    el('#coursePeriodList').addEventListener('click', event => { const remove = event.target.closest('[data-remove-course-period]'); if (remove) { remove.closest('.course-period-row').remove(); if (!el('.course-period-row', el('#coursePeriodList'))) setSafeMarkup(el('#coursePeriodList'), '<p class="calendar-period-empty">尚未设置课程节次</p>'); } });
     el('#saveTimetableSettingsButton').addEventListener('click', saveTimetableSettings);
     el('#addCourseButton').addEventListener('click', () => openCourseDialog());
     el('#courseList').addEventListener('click', event => { const button = event.target.closest('[data-edit-course]'); if (button) openCourseDialog(state.settings.timetable.courses.find(course => String(course.id) === button.dataset.editCourse)); });
@@ -3398,7 +3411,7 @@
     el('#privacyToggle').addEventListener('click', event => { const pressed = event.currentTarget.getAttribute('aria-pressed') === 'true'; event.currentTarget.setAttribute('aria-pressed', String(!pressed)); el('#appShell').classList.toggle('privacy-mode', !pressed); showToast(!pressed ? '隐私模式已开启' : '隐私模式已关闭'); });
     el('#timerButton').addEventListener('click', event => { const active = event.currentTarget.dataset.active === 'true'; event.currentTarget.dataset.active = String(!active); event.currentTarget.textContent = active ? '开始计时' : '暂停计时'; showToast(active ? '计时已暂停' : '已开始记录实际时长'); });
     el('#regenerateAdvice').addEventListener('click', event => { event.currentTarget.disabled = true; el('#adviceText').textContent = '正在根据今日任务、日程和目标状态生成建议…'; setTimeout(() => { el('#adviceText').textContent = '先完成小论文的可验证产出；若下午精力下降，将英语任务拆为阅读与词汇两个短时段。'; event.currentTarget.disabled = false; showToast('AI建议草案已更新，未自动调整计划'); }, 900); });
-    el('#openLibraryAdd').addEventListener('click', () => { el('#libraryFolderInput').innerHTML = folderOptions(activeLibraryFolder === 'all' ? 'system-other' : activeLibraryFolder); el('#libraryAddDialog').showModal(); });
+    el('#openLibraryAdd').addEventListener('click', () => { setSafeMarkup(el('#libraryFolderInput'), folderOptions(activeLibraryFolder === 'all' ? 'system-other' : activeLibraryFolder)); el('#libraryAddDialog').showModal(); });
     el('#createLibraryFolderButton').addEventListener('click', () => openLibraryFolderDialog());
     el('#libraryFolderForm').addEventListener('submit', saveLibraryFolder);
     el('#uploadLibraryFilesButton').addEventListener('click', () => chooseLibraryFiles('chooseLibraryFiles'));

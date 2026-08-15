@@ -60,6 +60,7 @@ build flow.
 | [PDF.js](https://github.com/mozilla/pdf.js) | Apache-2.0 | Local PDF viewing for study and research files | Use packaged release modules; never copy the full repository |
 | [Mozilla Readability](https://github.com/mozilla/readability) | Apache-2.0 | User-triggered extraction of permitted web articles | Store metadata/excerpts by default, not copyrighted full text |
 | [Free Dictionary API](https://dictionaryapi.dev/) | GPL-3.0 server implementation; public API is free to use | English IPA, pronunciation audio, parts of speech, definitions and examples for interactive word lookup | Adopted as a remote service on 2026-08-02; no server code or bulk dictionary data is bundled, responses are displayed on demand with source attribution, and Youdao remains the Chinese translation source |
+| [DOMPurify 3.4.13](https://github.com/cure53/DOMPurify/releases/tag/3.4.13) | Apache-2.0 OR MPL-2.0; bundled under Apache-2.0 | Sanitize dynamic interface fragments before DOM insertion | Vendored minified browser build only; SHA-256 `9ab3d44d73c3e3947f9ab72e0f0bc15c7f1931d60b365ba261fc85fe59013c56`; replace only after license, integrity, malicious-payload and CodeQL verification |
 
 ## External application integrations
 

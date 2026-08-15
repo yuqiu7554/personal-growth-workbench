@@ -5,6 +5,7 @@ const required = ['LICENSE','README.md','CHANGELOG.md','THIRD_PARTY_NOTICES.md',
 for (const file of required) if (!fs.existsSync(new URL(file, root))) throw new Error(`missing release file: ${file}`);
 execFileSync('/usr/bin/plutil', ['-lint', new URL('native-shell/PrivacyInfo.xcprivacy', root).pathname], { stdio: 'inherit' });
 execFileSync('/usr/bin/plutil', ['-lint', new URL('native-shell/PersonalGrowthWorkbench.entitlements', root).pathname], { stdio: 'inherit' });
+execFileSync(process.execPath, [new URL('scripts/check-dom-security.mjs', root).pathname], { stdio: 'inherit' });
 const plist = fs.readFileSync(new URL('native-shell/Info.plist', root), 'utf8');
 if (!plist.includes('<string>com.qiuyu.personalgrowthworkbench</string>') || !plist.includes('<string>0.6.0</string>') || !plist.includes('<string>13</string>')) throw new Error('release identity mismatch');
 const license = fs.readFileSync(new URL('LICENSE', root), 'utf8');

@@ -2,7 +2,7 @@
 
 ## Executive summary
 
-No plaintext API secrets were found. Credentials are isolated in macOS Keychain and SQLite is user-visible. Encrypted backup/restore and portable export are implemented and deterministically tested. Public 1.0 remains blocked by final attachment authorization review, release signing/notarization, clean-machine testing and the author's license decision.
+No plaintext API secrets were found. Credentials are isolated in macOS Keychain and SQLite is user-visible. Encrypted backup/restore and portable export are implemented and deterministically tested. Dynamic markup now passes through a pinned DOMPurify boundary. Public binary distribution remains blocked by final attachment authorization review, release signing/notarization and clean-machine testing; the current GitHub plan remains source-only.
 
 ## High priority
 
@@ -21,14 +21,13 @@ No plaintext API secrets were found. Credentials are isolated in macOS Keychain 
 
 ## Medium priority
 
-### SEC-03: Dynamic HTML rendering needs continued escaping discipline
+### SEC-03: Dynamic HTML rendering needs continued escaping discipline (resolved locally 2026-08-16)
 
 - Location: dynamic render functions in `workbench-prototype/app.js`.
-- Evidence: the UI uses `innerHTML`; current user/network values are mostly passed through `escapeHtml`.
-- Impact: a future unescaped import or network field could cause DOM injection.
-- Fix: prefer `textContent`/DOM construction for imported content. A local CSP was added; existing dynamic layout styles still require `style-src 'unsafe-inline'` until those styles are refactored.
+- Resolution: all direct `innerHTML` assignments were removed. Rich markup passes through pinned DOMPurify 3.4.13 with forbidden active tags and `srcdoc`, returns a `DocumentFragment`, and is installed with `replaceChildren`. Plain-text extraction uses `DOMParser` plus `textContent` instead of incomplete tag-removal regular expressions.
+- Verification: `scripts/check-dom-security.mjs` checks the vendored file SHA-256, script loading order, sanitizer configuration, forbidden code/DOM sinks and adversarial payload corpus. The check is part of release readiness. GitHub CodeQL must still confirm remote data-flow alerts are cleared after push.
 
-### SEC-04: Public release controls remain incomplete
+### SEC-04: Binary release controls remain incomplete
 
-- Evidence: no finalized license, public GitHub repository, CI security scan, Developer ID/notarized release or updater signature.
-- Fix: complete `docs/RELEASE_READINESS.md` and `docs/OPEN_SOURCE_WORKFLOW.md` before publishing source or binaries.
+- Evidence: the GPL-3.0-only license, public GitHub repository, source CI and CodeQL are configured. A Developer ID certificate, notarized distribution and signed updater are not configured.
+- Fix: source publication may continue. Do not publish a prebuilt binary until the signing, notarization and clean-machine gates in `docs/RELEASE_READINESS.md` are complete.
