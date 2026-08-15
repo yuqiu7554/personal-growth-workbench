@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.1 - 2026-08-16
 
 - 增加发布前 DOM 安全加固：所有动态 HTML 渲染统一经过固定版本 DOMPurify，并使用净化后的 `DocumentFragment` 替换节点。
 - 移除直接 `innerHTML` 写入和基于不完整正则的标签清理，覆盖资讯、论文、AI、资料库、英语、健康、复盘、日历、设置及周月报。

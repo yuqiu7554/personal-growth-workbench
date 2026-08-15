@@ -10,7 +10,7 @@
 
 ## 当前状态
 
-当前为公开 1.0 前的 `0.6.0` 源码开发版本。可运行包采用 Objective-C、AppKit、WebKit 和系统 SQLite；`workbench-prototype` 是打包进 `.app` 的界面资源，不是独立网页产品。
+当前为公开 1.0 前的 `0.6.1` 源码开发版本。可运行包采用 Objective-C、AppKit、WebKit 和系统 SQLite；`workbench-prototype` 是打包进 `.app` 的界面资源，不是独立网页产品。
 
 项目仓库：<https://github.com/yuqiu7554/personal-growth-workbench>
 
