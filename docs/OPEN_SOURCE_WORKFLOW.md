@@ -1,6 +1,6 @@
 # Open-source development and release workflow
 
-Status: working document. Last reviewed: 2026-08-02.
+Status: working document. Last reviewed: 2026-08-16.
 
 ## Goals
 
@@ -8,7 +8,7 @@ Status: working document. Last reviewed: 2026-08-02.
 - Keep personal data, credentials, copyrighted material and local paths out of GitHub.
 - Make every release reproducible, reversible and understandable to a new contributor.
 - Publish the reusable Workbench skill separately from machine-specific delivery settings.
-- Publish a Notion companion template after the first stable open-source desktop release.
+- Maintain a public, copyable Notion companion template alongside the source release.
 
 ## Notion companion template
 
@@ -23,6 +23,10 @@ desktop AI permission model. Publish both an empty version and a synthetic-examp
 version may contain personal records, credentials, copyrighted papers, exam material or private
 paths. Any future desktop-to-Notion transfer starts as an explicit Markdown/CSV export and import
 workflow; background two-way synchronization requires separate privacy and API design approval.
+
+The empty template is published at
+<https://tidal-birth-0a8.notion.site/3be7eec056008023bdf8c560f027f42f>. It contains one dashboard
+page and eight empty child databases, with public duplication enabled and public editing disabled.
 
 ## Application icon
 
